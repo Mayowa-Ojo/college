@@ -1,0 +1,7 @@
+tmp/
+.vscode/
+build/
+dist/
+
+.env
+*.key
