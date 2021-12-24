@@ -1,19 +1,33 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"log"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	r := gin.Default()
+	context := context.Background()
+	cfg := LoadConfig()
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "ok",
-		})
-	})
+	client := NewEntClient(cfg)
+	defer client.Close()
 
-	r.Run()
+	SchemaMigrateUp(context, client)
+
+	router := Run(client)
+
+	srv := &http.Server{
+		Addr:    cfg.Port,
+		Handler: router,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) {
+			log.Printf("server error: %s", err)
+		}
+	}()
+
+	GracefulShutdown(srv)
 }
