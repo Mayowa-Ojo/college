@@ -11,8 +11,13 @@ var (
 	// StudentsColumns holds the columns for the "students" table.
 	StudentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "firstname", Type: field.TypeString},
-		{Name: "lastname", Type: field.TypeString},
+		{Name: "first_name", Type: field.TypeString, Size: 250},
+		{Name: "last_name", Type: field.TypeString, Size: 250},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "admission_number", Type: field.TypeString},
+		{Name: "year", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// StudentsTable holds the schema information for the "students" table.
 	StudentsTable = &schema.Table{

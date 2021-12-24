@@ -3,9 +3,9 @@
 package ent
 
 import (
+	"college/ent/predicate"
+	"college/ent/student"
 	"context"
-	"ent-demo/ent/predicate"
-	"ent-demo/ent/student"
 	"errors"
 	"fmt"
 	"math"
@@ -253,12 +253,12 @@ func (sq *StudentQuery) Clone() *StudentQuery {
 // Example:
 //
 //	var v []struct {
-//		Firstname string `json:"firstname,omitempty"`
+//		FirstName string `json:"first_name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Student.Query().
-//		GroupBy(student.FieldFirstname).
+//		GroupBy(student.FieldFirstName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -280,11 +280,11 @@ func (sq *StudentQuery) GroupBy(field string, fields ...string) *StudentGroupBy 
 // Example:
 //
 //	var v []struct {
-//		Firstname string `json:"firstname,omitempty"`
+//		FirstName string `json:"first_name,omitempty"`
 //	}
 //
 //	client.Student.Query().
-//		Select(student.FieldFirstname).
+//		Select(student.FieldFirstName).
 //		Scan(ctx, &v)
 //
 func (sq *StudentQuery) Select(fields ...string) *StudentSelect {

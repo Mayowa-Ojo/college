@@ -2,15 +2,29 @@
 
 package student
 
+import (
+	"time"
+)
+
 const (
 	// Label holds the string label denoting the student type in the database.
 	Label = "student"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldFirstname holds the string denoting the firstname field in the database.
-	FieldFirstname = "firstname"
-	// FieldLastname holds the string denoting the lastname field in the database.
-	FieldLastname = "lastname"
+	// FieldFirstName holds the string denoting the first_name field in the database.
+	FieldFirstName = "first_name"
+	// FieldLastName holds the string denoting the last_name field in the database.
+	FieldLastName = "last_name"
+	// FieldEmail holds the string denoting the email field in the database.
+	FieldEmail = "email"
+	// FieldAdmissionNumber holds the string denoting the admission_number field in the database.
+	FieldAdmissionNumber = "admission_number"
+	// FieldYear holds the string denoting the year field in the database.
+	FieldYear = "year"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// Table holds the table name of the student in the database.
 	Table = "students"
 )
@@ -18,8 +32,13 @@ const (
 // Columns holds all SQL columns for student fields.
 var Columns = []string{
 	FieldID,
-	FieldFirstname,
-	FieldLastname,
+	FieldFirstName,
+	FieldLastName,
+	FieldEmail,
+	FieldAdmissionNumber,
+	FieldYear,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -31,3 +50,20 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// FirstNameValidator is a validator for the "first_name" field. It is called by the builders before save.
+	FirstNameValidator func(string) error
+	// LastNameValidator is a validator for the "last_name" field. It is called by the builders before save.
+	LastNameValidator func(string) error
+	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	EmailValidator func(string) error
+	// YearValidator is a validator for the "year" field. It is called by the builders before save.
+	YearValidator func(int) error
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
+)

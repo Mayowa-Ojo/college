@@ -3,10 +3,11 @@
 package ent
 
 import (
+	"college/ent/student"
 	"context"
-	"ent-demo/ent/student"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -19,15 +20,61 @@ type StudentCreate struct {
 	hooks    []Hook
 }
 
-// SetFirstname sets the "firstname" field.
-func (sc *StudentCreate) SetFirstname(s string) *StudentCreate {
-	sc.mutation.SetFirstname(s)
+// SetFirstName sets the "first_name" field.
+func (sc *StudentCreate) SetFirstName(s string) *StudentCreate {
+	sc.mutation.SetFirstName(s)
 	return sc
 }
 
-// SetLastname sets the "lastname" field.
-func (sc *StudentCreate) SetLastname(s string) *StudentCreate {
-	sc.mutation.SetLastname(s)
+// SetLastName sets the "last_name" field.
+func (sc *StudentCreate) SetLastName(s string) *StudentCreate {
+	sc.mutation.SetLastName(s)
+	return sc
+}
+
+// SetEmail sets the "email" field.
+func (sc *StudentCreate) SetEmail(s string) *StudentCreate {
+	sc.mutation.SetEmail(s)
+	return sc
+}
+
+// SetAdmissionNumber sets the "admission_number" field.
+func (sc *StudentCreate) SetAdmissionNumber(s string) *StudentCreate {
+	sc.mutation.SetAdmissionNumber(s)
+	return sc
+}
+
+// SetYear sets the "year" field.
+func (sc *StudentCreate) SetYear(i int) *StudentCreate {
+	sc.mutation.SetYear(i)
+	return sc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (sc *StudentCreate) SetCreatedAt(t time.Time) *StudentCreate {
+	sc.mutation.SetCreatedAt(t)
+	return sc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (sc *StudentCreate) SetNillableCreatedAt(t *time.Time) *StudentCreate {
+	if t != nil {
+		sc.SetCreatedAt(*t)
+	}
+	return sc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (sc *StudentCreate) SetUpdatedAt(t time.Time) *StudentCreate {
+	sc.mutation.SetUpdatedAt(t)
+	return sc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (sc *StudentCreate) SetNillableUpdatedAt(t *time.Time) *StudentCreate {
+	if t != nil {
+		sc.SetUpdatedAt(*t)
+	}
 	return sc
 }
 
@@ -42,6 +89,7 @@ func (sc *StudentCreate) Save(ctx context.Context) (*Student, error) {
 		err  error
 		node *Student
 	)
+	sc.defaults()
 	if len(sc.hooks) == 0 {
 		if err = sc.check(); err != nil {
 			return nil, err
@@ -99,13 +147,60 @@ func (sc *StudentCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (sc *StudentCreate) defaults() {
+	if _, ok := sc.mutation.CreatedAt(); !ok {
+		v := student.DefaultCreatedAt()
+		sc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := sc.mutation.UpdatedAt(); !ok {
+		v := student.DefaultUpdatedAt()
+		sc.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (sc *StudentCreate) check() error {
-	if _, ok := sc.mutation.Firstname(); !ok {
-		return &ValidationError{Name: "firstname", err: errors.New(`ent: missing required field "firstname"`)}
+	if _, ok := sc.mutation.FirstName(); !ok {
+		return &ValidationError{Name: "first_name", err: errors.New(`ent: missing required field "first_name"`)}
 	}
-	if _, ok := sc.mutation.Lastname(); !ok {
-		return &ValidationError{Name: "lastname", err: errors.New(`ent: missing required field "lastname"`)}
+	if v, ok := sc.mutation.FirstName(); ok {
+		if err := student.FirstNameValidator(v); err != nil {
+			return &ValidationError{Name: "first_name", err: fmt.Errorf(`ent: validator failed for field "first_name": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.LastName(); !ok {
+		return &ValidationError{Name: "last_name", err: errors.New(`ent: missing required field "last_name"`)}
+	}
+	if v, ok := sc.mutation.LastName(); ok {
+		if err := student.LastNameValidator(v); err != nil {
+			return &ValidationError{Name: "last_name", err: fmt.Errorf(`ent: validator failed for field "last_name": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.Email(); !ok {
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "email"`)}
+	}
+	if v, ok := sc.mutation.Email(); ok {
+		if err := student.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "email": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.AdmissionNumber(); !ok {
+		return &ValidationError{Name: "admission_number", err: errors.New(`ent: missing required field "admission_number"`)}
+	}
+	if _, ok := sc.mutation.Year(); !ok {
+		return &ValidationError{Name: "year", err: errors.New(`ent: missing required field "year"`)}
+	}
+	if v, ok := sc.mutation.Year(); ok {
+		if err := student.YearValidator(v); err != nil {
+			return &ValidationError{Name: "year", err: fmt.Errorf(`ent: validator failed for field "year": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+	}
+	if _, ok := sc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
 	}
 	return nil
 }
@@ -134,21 +229,61 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := sc.mutation.Firstname(); ok {
+	if value, ok := sc.mutation.FirstName(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldFirstname,
+			Column: student.FieldFirstName,
 		})
-		_node.Firstname = value
+		_node.FirstName = value
 	}
-	if value, ok := sc.mutation.Lastname(); ok {
+	if value, ok := sc.mutation.LastName(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldLastname,
+			Column: student.FieldLastName,
 		})
-		_node.Lastname = value
+		_node.LastName = value
+	}
+	if value, ok := sc.mutation.Email(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: student.FieldEmail,
+		})
+		_node.Email = value
+	}
+	if value, ok := sc.mutation.AdmissionNumber(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: student.FieldAdmissionNumber,
+		})
+		_node.AdmissionNumber = value
+	}
+	if value, ok := sc.mutation.Year(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: student.FieldYear,
+		})
+		_node.Year = value
+	}
+	if value, ok := sc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: student.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := sc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: student.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
 	}
 	return _node, _spec
 }
@@ -167,6 +302,7 @@ func (scb *StudentCreateBulk) Save(ctx context.Context) ([]*Student, error) {
 	for i := range scb.builders {
 		func(i int, root context.Context) {
 			builder := scb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*StudentMutation)
 				if !ok {

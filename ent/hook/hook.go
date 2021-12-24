@@ -3,8 +3,8 @@
 package hook
 
 import (
+	"college/ent"
 	"context"
-	"ent-demo/ent"
 	"fmt"
 )
 

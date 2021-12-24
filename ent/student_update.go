@@ -3,10 +3,11 @@
 package ent
 
 import (
+	"college/ent/predicate"
+	"college/ent/student"
 	"context"
-	"ent-demo/ent/predicate"
-	"ent-demo/ent/student"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -26,15 +27,60 @@ func (su *StudentUpdate) Where(ps ...predicate.Student) *StudentUpdate {
 	return su
 }
 
-// SetFirstname sets the "firstname" field.
-func (su *StudentUpdate) SetFirstname(s string) *StudentUpdate {
-	su.mutation.SetFirstname(s)
+// SetFirstName sets the "first_name" field.
+func (su *StudentUpdate) SetFirstName(s string) *StudentUpdate {
+	su.mutation.SetFirstName(s)
 	return su
 }
 
-// SetLastname sets the "lastname" field.
-func (su *StudentUpdate) SetLastname(s string) *StudentUpdate {
-	su.mutation.SetLastname(s)
+// SetLastName sets the "last_name" field.
+func (su *StudentUpdate) SetLastName(s string) *StudentUpdate {
+	su.mutation.SetLastName(s)
+	return su
+}
+
+// SetEmail sets the "email" field.
+func (su *StudentUpdate) SetEmail(s string) *StudentUpdate {
+	su.mutation.SetEmail(s)
+	return su
+}
+
+// SetAdmissionNumber sets the "admission_number" field.
+func (su *StudentUpdate) SetAdmissionNumber(s string) *StudentUpdate {
+	su.mutation.SetAdmissionNumber(s)
+	return su
+}
+
+// SetYear sets the "year" field.
+func (su *StudentUpdate) SetYear(i int) *StudentUpdate {
+	su.mutation.ResetYear()
+	su.mutation.SetYear(i)
+	return su
+}
+
+// AddYear adds i to the "year" field.
+func (su *StudentUpdate) AddYear(i int) *StudentUpdate {
+	su.mutation.AddYear(i)
+	return su
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (su *StudentUpdate) SetCreatedAt(t time.Time) *StudentUpdate {
+	su.mutation.SetCreatedAt(t)
+	return su
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (su *StudentUpdate) SetNillableCreatedAt(t *time.Time) *StudentUpdate {
+	if t != nil {
+		su.SetCreatedAt(*t)
+	}
+	return su
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (su *StudentUpdate) SetUpdatedAt(t time.Time) *StudentUpdate {
+	su.mutation.SetUpdatedAt(t)
 	return su
 }
 
@@ -49,13 +95,20 @@ func (su *StudentUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	su.defaults()
 	if len(su.hooks) == 0 {
+		if err = su.check(); err != nil {
+			return 0, err
+		}
 		affected, err = su.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*StudentMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = su.check(); err != nil {
+				return 0, err
 			}
 			su.mutation = mutation
 			affected, err = su.sqlSave(ctx)
@@ -97,6 +150,39 @@ func (su *StudentUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (su *StudentUpdate) defaults() {
+	if _, ok := su.mutation.UpdatedAt(); !ok {
+		v := student.UpdateDefaultUpdatedAt()
+		su.mutation.SetUpdatedAt(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (su *StudentUpdate) check() error {
+	if v, ok := su.mutation.FirstName(); ok {
+		if err := student.FirstNameValidator(v); err != nil {
+			return &ValidationError{Name: "first_name", err: fmt.Errorf("ent: validator failed for field \"first_name\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.LastName(); ok {
+		if err := student.LastNameValidator(v); err != nil {
+			return &ValidationError{Name: "last_name", err: fmt.Errorf("ent: validator failed for field \"last_name\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.Email(); ok {
+		if err := student.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf("ent: validator failed for field \"email\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.Year(); ok {
+		if err := student.YearValidator(v); err != nil {
+			return &ValidationError{Name: "year", err: fmt.Errorf("ent: validator failed for field \"year\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -115,18 +201,60 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := su.mutation.Firstname(); ok {
+	if value, ok := su.mutation.FirstName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldFirstname,
+			Column: student.FieldFirstName,
 		})
 	}
-	if value, ok := su.mutation.Lastname(); ok {
+	if value, ok := su.mutation.LastName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldLastname,
+			Column: student.FieldLastName,
+		})
+	}
+	if value, ok := su.mutation.Email(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: student.FieldEmail,
+		})
+	}
+	if value, ok := su.mutation.AdmissionNumber(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: student.FieldAdmissionNumber,
+		})
+	}
+	if value, ok := su.mutation.Year(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: student.FieldYear,
+		})
+	}
+	if value, ok := su.mutation.AddedYear(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: student.FieldYear,
+		})
+	}
+	if value, ok := su.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: student.FieldCreatedAt,
+		})
+	}
+	if value, ok := su.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: student.FieldUpdatedAt,
 		})
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
@@ -148,15 +276,60 @@ type StudentUpdateOne struct {
 	mutation *StudentMutation
 }
 
-// SetFirstname sets the "firstname" field.
-func (suo *StudentUpdateOne) SetFirstname(s string) *StudentUpdateOne {
-	suo.mutation.SetFirstname(s)
+// SetFirstName sets the "first_name" field.
+func (suo *StudentUpdateOne) SetFirstName(s string) *StudentUpdateOne {
+	suo.mutation.SetFirstName(s)
 	return suo
 }
 
-// SetLastname sets the "lastname" field.
-func (suo *StudentUpdateOne) SetLastname(s string) *StudentUpdateOne {
-	suo.mutation.SetLastname(s)
+// SetLastName sets the "last_name" field.
+func (suo *StudentUpdateOne) SetLastName(s string) *StudentUpdateOne {
+	suo.mutation.SetLastName(s)
+	return suo
+}
+
+// SetEmail sets the "email" field.
+func (suo *StudentUpdateOne) SetEmail(s string) *StudentUpdateOne {
+	suo.mutation.SetEmail(s)
+	return suo
+}
+
+// SetAdmissionNumber sets the "admission_number" field.
+func (suo *StudentUpdateOne) SetAdmissionNumber(s string) *StudentUpdateOne {
+	suo.mutation.SetAdmissionNumber(s)
+	return suo
+}
+
+// SetYear sets the "year" field.
+func (suo *StudentUpdateOne) SetYear(i int) *StudentUpdateOne {
+	suo.mutation.ResetYear()
+	suo.mutation.SetYear(i)
+	return suo
+}
+
+// AddYear adds i to the "year" field.
+func (suo *StudentUpdateOne) AddYear(i int) *StudentUpdateOne {
+	suo.mutation.AddYear(i)
+	return suo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (suo *StudentUpdateOne) SetCreatedAt(t time.Time) *StudentUpdateOne {
+	suo.mutation.SetCreatedAt(t)
+	return suo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (suo *StudentUpdateOne) SetNillableCreatedAt(t *time.Time) *StudentUpdateOne {
+	if t != nil {
+		suo.SetCreatedAt(*t)
+	}
+	return suo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (suo *StudentUpdateOne) SetUpdatedAt(t time.Time) *StudentUpdateOne {
+	suo.mutation.SetUpdatedAt(t)
 	return suo
 }
 
@@ -178,13 +351,20 @@ func (suo *StudentUpdateOne) Save(ctx context.Context) (*Student, error) {
 		err  error
 		node *Student
 	)
+	suo.defaults()
 	if len(suo.hooks) == 0 {
+		if err = suo.check(); err != nil {
+			return nil, err
+		}
 		node, err = suo.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*StudentMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = suo.check(); err != nil {
+				return nil, err
 			}
 			suo.mutation = mutation
 			node, err = suo.sqlSave(ctx)
@@ -226,6 +406,39 @@ func (suo *StudentUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (suo *StudentUpdateOne) defaults() {
+	if _, ok := suo.mutation.UpdatedAt(); !ok {
+		v := student.UpdateDefaultUpdatedAt()
+		suo.mutation.SetUpdatedAt(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (suo *StudentUpdateOne) check() error {
+	if v, ok := suo.mutation.FirstName(); ok {
+		if err := student.FirstNameValidator(v); err != nil {
+			return &ValidationError{Name: "first_name", err: fmt.Errorf("ent: validator failed for field \"first_name\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.LastName(); ok {
+		if err := student.LastNameValidator(v); err != nil {
+			return &ValidationError{Name: "last_name", err: fmt.Errorf("ent: validator failed for field \"last_name\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.Email(); ok {
+		if err := student.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf("ent: validator failed for field \"email\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.Year(); ok {
+		if err := student.YearValidator(v); err != nil {
+			return &ValidationError{Name: "year", err: fmt.Errorf("ent: validator failed for field \"year\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -261,18 +474,60 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 			}
 		}
 	}
-	if value, ok := suo.mutation.Firstname(); ok {
+	if value, ok := suo.mutation.FirstName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldFirstname,
+			Column: student.FieldFirstName,
 		})
 	}
-	if value, ok := suo.mutation.Lastname(); ok {
+	if value, ok := suo.mutation.LastName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldLastname,
+			Column: student.FieldLastName,
+		})
+	}
+	if value, ok := suo.mutation.Email(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: student.FieldEmail,
+		})
+	}
+	if value, ok := suo.mutation.AdmissionNumber(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: student.FieldAdmissionNumber,
+		})
+	}
+	if value, ok := suo.mutation.Year(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: student.FieldYear,
+		})
+	}
+	if value, ok := suo.mutation.AddedYear(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: student.FieldYear,
+		})
+	}
+	if value, ok := suo.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: student.FieldCreatedAt,
+		})
+	}
+	if value, ok := suo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: student.FieldUpdatedAt,
 		})
 	}
 	_node = &Student{config: suo.config}

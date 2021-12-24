@@ -3,9 +3,9 @@
 package ent
 
 import (
+	"college/ent/predicate"
+	"college/ent/student"
 	"context"
-	"ent-demo/ent/predicate"
-	"ent-demo/ent/student"
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"

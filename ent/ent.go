@@ -3,7 +3,7 @@
 package ent
 
 import (
-	"ent-demo/ent/student"
+	"college/ent/student"
 	"errors"
 	"fmt"
 

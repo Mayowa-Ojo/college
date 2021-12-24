@@ -3,9 +3,10 @@
 package ent
 
 import (
-	"ent-demo/ent/student"
+	"college/ent/student"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 )
@@ -15,10 +16,20 @@ type Student struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Firstname holds the value of the "firstname" field.
-	Firstname string `json:"firstname,omitempty"`
-	// Lastname holds the value of the "lastname" field.
-	Lastname string `json:"lastname,omitempty"`
+	// FirstName holds the value of the "first_name" field.
+	FirstName string `json:"first_name,omitempty"`
+	// LastName holds the value of the "last_name" field.
+	LastName string `json:"last_name,omitempty"`
+	// Email holds the value of the "email" field.
+	Email string `json:"email,omitempty"`
+	// AdmissionNumber holds the value of the "admission_number" field.
+	AdmissionNumber string `json:"admission_number,omitempty"`
+	// Year holds the value of the "year" field.
+	Year int `json:"year,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -26,10 +37,12 @@ func (*Student) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case student.FieldID:
+		case student.FieldID, student.FieldYear:
 			values[i] = new(sql.NullInt64)
-		case student.FieldFirstname, student.FieldLastname:
+		case student.FieldFirstName, student.FieldLastName, student.FieldEmail, student.FieldAdmissionNumber:
 			values[i] = new(sql.NullString)
+		case student.FieldCreatedAt, student.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Student", columns[i])
 		}
@@ -51,17 +64,47 @@ func (s *Student) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			s.ID = int(value.Int64)
-		case student.FieldFirstname:
+		case student.FieldFirstName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field firstname", values[i])
+				return fmt.Errorf("unexpected type %T for field first_name", values[i])
 			} else if value.Valid {
-				s.Firstname = value.String
+				s.FirstName = value.String
 			}
-		case student.FieldLastname:
+		case student.FieldLastName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field lastname", values[i])
+				return fmt.Errorf("unexpected type %T for field last_name", values[i])
 			} else if value.Valid {
-				s.Lastname = value.String
+				s.LastName = value.String
+			}
+		case student.FieldEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field email", values[i])
+			} else if value.Valid {
+				s.Email = value.String
+			}
+		case student.FieldAdmissionNumber:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field admission_number", values[i])
+			} else if value.Valid {
+				s.AdmissionNumber = value.String
+			}
+		case student.FieldYear:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field year", values[i])
+			} else if value.Valid {
+				s.Year = int(value.Int64)
+			}
+		case student.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				s.CreatedAt = value.Time
+			}
+		case student.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				s.UpdatedAt = value.Time
 			}
 		}
 	}
@@ -91,10 +134,20 @@ func (s *Student) String() string {
 	var builder strings.Builder
 	builder.WriteString("Student(")
 	builder.WriteString(fmt.Sprintf("id=%v", s.ID))
-	builder.WriteString(", firstname=")
-	builder.WriteString(s.Firstname)
-	builder.WriteString(", lastname=")
-	builder.WriteString(s.Lastname)
+	builder.WriteString(", first_name=")
+	builder.WriteString(s.FirstName)
+	builder.WriteString(", last_name=")
+	builder.WriteString(s.LastName)
+	builder.WriteString(", email=")
+	builder.WriteString(s.Email)
+	builder.WriteString(", admission_number=")
+	builder.WriteString(s.AdmissionNumber)
+	builder.WriteString(", year=")
+	builder.WriteString(fmt.Sprintf("%v", s.Year))
+	builder.WriteString(", created_at=")
+	builder.WriteString(s.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(s.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

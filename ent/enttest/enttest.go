@@ -3,10 +3,10 @@
 package enttest
 
 import (
+	"college/ent"
 	"context"
-	"ent-demo/ent"
 	// required by schema hooks.
-	_ "ent-demo/ent/runtime"
+	_ "college/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
 )

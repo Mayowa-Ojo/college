@@ -2,8 +2,56 @@
 
 package ent
 
+import (
+	"college/ent/schema"
+	"college/ent/student"
+	"time"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	studentFields := schema.Student{}.Fields()
+	_ = studentFields
+	// studentDescFirstName is the schema descriptor for first_name field.
+	studentDescFirstName := studentFields[0].Descriptor()
+	// student.FirstNameValidator is a validator for the "first_name" field. It is called by the builders before save.
+	student.FirstNameValidator = studentDescFirstName.Validators[0].(func(string) error)
+	// studentDescLastName is the schema descriptor for last_name field.
+	studentDescLastName := studentFields[1].Descriptor()
+	// student.LastNameValidator is a validator for the "last_name" field. It is called by the builders before save.
+	student.LastNameValidator = studentDescLastName.Validators[0].(func(string) error)
+	// studentDescEmail is the schema descriptor for email field.
+	studentDescEmail := studentFields[2].Descriptor()
+	// student.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	student.EmailValidator = studentDescEmail.Validators[0].(func(string) error)
+	// studentDescYear is the schema descriptor for year field.
+	studentDescYear := studentFields[4].Descriptor()
+	// student.YearValidator is a validator for the "year" field. It is called by the builders before save.
+	student.YearValidator = func() func(int) error {
+		validators := studentDescYear.Validators
+		fns := [...]func(int) error{
+			validators[0].(func(int) error),
+			validators[1].(func(int) error),
+		}
+		return func(year int) error {
+			for _, fn := range fns {
+				if err := fn(year); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// studentDescCreatedAt is the schema descriptor for created_at field.
+	studentDescCreatedAt := studentFields[5].Descriptor()
+	// student.DefaultCreatedAt holds the default value on creation for the created_at field.
+	student.DefaultCreatedAt = studentDescCreatedAt.Default.(func() time.Time)
+	// studentDescUpdatedAt is the schema descriptor for updated_at field.
+	studentDescUpdatedAt := studentFields[6].Descriptor()
+	// student.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	student.DefaultUpdatedAt = studentDescUpdatedAt.Default.(func() time.Time)
+	// student.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	student.UpdateDefaultUpdatedAt = studentDescUpdatedAt.UpdateDefault.(func() time.Time)
 }
