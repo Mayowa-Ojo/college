@@ -6,6 +6,8 @@ import (
 	"college/ent/schema"
 	"college/ent/student"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -14,20 +16,20 @@ import (
 func init() {
 	studentFields := schema.Student{}.Fields()
 	_ = studentFields
-	// studentDescFirstName is the schema descriptor for first_name field.
-	studentDescFirstName := studentFields[0].Descriptor()
-	// student.FirstNameValidator is a validator for the "first_name" field. It is called by the builders before save.
-	student.FirstNameValidator = studentDescFirstName.Validators[0].(func(string) error)
-	// studentDescLastName is the schema descriptor for last_name field.
-	studentDescLastName := studentFields[1].Descriptor()
-	// student.LastNameValidator is a validator for the "last_name" field. It is called by the builders before save.
-	student.LastNameValidator = studentDescLastName.Validators[0].(func(string) error)
+	// studentDescFirstname is the schema descriptor for firstname field.
+	studentDescFirstname := studentFields[1].Descriptor()
+	// student.FirstnameValidator is a validator for the "firstname" field. It is called by the builders before save.
+	student.FirstnameValidator = studentDescFirstname.Validators[0].(func(string) error)
+	// studentDescLastname is the schema descriptor for lastname field.
+	studentDescLastname := studentFields[2].Descriptor()
+	// student.LastnameValidator is a validator for the "lastname" field. It is called by the builders before save.
+	student.LastnameValidator = studentDescLastname.Validators[0].(func(string) error)
 	// studentDescEmail is the schema descriptor for email field.
-	studentDescEmail := studentFields[2].Descriptor()
+	studentDescEmail := studentFields[3].Descriptor()
 	// student.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	student.EmailValidator = studentDescEmail.Validators[0].(func(string) error)
 	// studentDescYear is the schema descriptor for year field.
-	studentDescYear := studentFields[4].Descriptor()
+	studentDescYear := studentFields[5].Descriptor()
 	// student.YearValidator is a validator for the "year" field. It is called by the builders before save.
 	student.YearValidator = func() func(int) error {
 		validators := studentDescYear.Validators
@@ -45,13 +47,17 @@ func init() {
 		}
 	}()
 	// studentDescCreatedAt is the schema descriptor for created_at field.
-	studentDescCreatedAt := studentFields[5].Descriptor()
+	studentDescCreatedAt := studentFields[6].Descriptor()
 	// student.DefaultCreatedAt holds the default value on creation for the created_at field.
 	student.DefaultCreatedAt = studentDescCreatedAt.Default.(func() time.Time)
 	// studentDescUpdatedAt is the schema descriptor for updated_at field.
-	studentDescUpdatedAt := studentFields[6].Descriptor()
+	studentDescUpdatedAt := studentFields[7].Descriptor()
 	// student.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	student.DefaultUpdatedAt = studentDescUpdatedAt.Default.(func() time.Time)
 	// student.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	student.UpdateDefaultUpdatedAt = studentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// studentDescID is the schema descriptor for id field.
+	studentDescID := studentFields[0].Descriptor()
+	// student.DefaultID holds the default value on creation for the id field.
+	student.DefaultID = studentDescID.Default.(func() uuid.UUID)
 }

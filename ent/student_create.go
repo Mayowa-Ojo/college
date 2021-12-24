@@ -11,6 +11,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // StudentCreate is the builder for creating a Student entity.
@@ -20,15 +21,15 @@ type StudentCreate struct {
 	hooks    []Hook
 }
 
-// SetFirstName sets the "first_name" field.
-func (sc *StudentCreate) SetFirstName(s string) *StudentCreate {
-	sc.mutation.SetFirstName(s)
+// SetFirstname sets the "firstname" field.
+func (sc *StudentCreate) SetFirstname(s string) *StudentCreate {
+	sc.mutation.SetFirstname(s)
 	return sc
 }
 
-// SetLastName sets the "last_name" field.
-func (sc *StudentCreate) SetLastName(s string) *StudentCreate {
-	sc.mutation.SetLastName(s)
+// SetLastname sets the "lastname" field.
+func (sc *StudentCreate) SetLastname(s string) *StudentCreate {
+	sc.mutation.SetLastname(s)
 	return sc
 }
 
@@ -75,6 +76,12 @@ func (sc *StudentCreate) SetNillableUpdatedAt(t *time.Time) *StudentCreate {
 	if t != nil {
 		sc.SetUpdatedAt(*t)
 	}
+	return sc
+}
+
+// SetID sets the "id" field.
+func (sc *StudentCreate) SetID(u uuid.UUID) *StudentCreate {
+	sc.mutation.SetID(u)
 	return sc
 }
 
@@ -157,24 +164,28 @@ func (sc *StudentCreate) defaults() {
 		v := student.DefaultUpdatedAt()
 		sc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := sc.mutation.ID(); !ok {
+		v := student.DefaultID()
+		sc.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (sc *StudentCreate) check() error {
-	if _, ok := sc.mutation.FirstName(); !ok {
-		return &ValidationError{Name: "first_name", err: errors.New(`ent: missing required field "first_name"`)}
+	if _, ok := sc.mutation.Firstname(); !ok {
+		return &ValidationError{Name: "firstname", err: errors.New(`ent: missing required field "firstname"`)}
 	}
-	if v, ok := sc.mutation.FirstName(); ok {
-		if err := student.FirstNameValidator(v); err != nil {
-			return &ValidationError{Name: "first_name", err: fmt.Errorf(`ent: validator failed for field "first_name": %w`, err)}
+	if v, ok := sc.mutation.Firstname(); ok {
+		if err := student.FirstnameValidator(v); err != nil {
+			return &ValidationError{Name: "firstname", err: fmt.Errorf(`ent: validator failed for field "firstname": %w`, err)}
 		}
 	}
-	if _, ok := sc.mutation.LastName(); !ok {
-		return &ValidationError{Name: "last_name", err: errors.New(`ent: missing required field "last_name"`)}
+	if _, ok := sc.mutation.Lastname(); !ok {
+		return &ValidationError{Name: "lastname", err: errors.New(`ent: missing required field "lastname"`)}
 	}
-	if v, ok := sc.mutation.LastName(); ok {
-		if err := student.LastNameValidator(v); err != nil {
-			return &ValidationError{Name: "last_name", err: fmt.Errorf(`ent: validator failed for field "last_name": %w`, err)}
+	if v, ok := sc.mutation.Lastname(); ok {
+		if err := student.LastnameValidator(v); err != nil {
+			return &ValidationError{Name: "lastname", err: fmt.Errorf(`ent: validator failed for field "lastname": %w`, err)}
 		}
 	}
 	if _, ok := sc.mutation.Email(); !ok {
@@ -213,8 +224,9 @@ func (sc *StudentCreate) sqlSave(ctx context.Context) (*Student, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(uuid.UUID)
+	}
 	return _node, nil
 }
 
@@ -224,26 +236,30 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: student.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: student.FieldID,
 			},
 		}
 	)
-	if value, ok := sc.mutation.FirstName(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: student.FieldFirstName,
-		})
-		_node.FirstName = value
+	if id, ok := sc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
 	}
-	if value, ok := sc.mutation.LastName(); ok {
+	if value, ok := sc.mutation.Firstname(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldLastName,
+			Column: student.FieldFirstname,
 		})
-		_node.LastName = value
+		_node.Firstname = value
+	}
+	if value, ok := sc.mutation.Lastname(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: student.FieldLastname,
+		})
+		_node.Lastname = value
 	}
 	if value, ok := sc.mutation.Email(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -330,10 +346,6 @@ func (scb *StudentCreateBulk) Save(ctx context.Context) ([]*Student, error) {
 				}
 				mutation.id = &nodes[i].ID
 				mutation.done = true
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

@@ -27,15 +27,15 @@ func (su *StudentUpdate) Where(ps ...predicate.Student) *StudentUpdate {
 	return su
 }
 
-// SetFirstName sets the "first_name" field.
-func (su *StudentUpdate) SetFirstName(s string) *StudentUpdate {
-	su.mutation.SetFirstName(s)
+// SetFirstname sets the "firstname" field.
+func (su *StudentUpdate) SetFirstname(s string) *StudentUpdate {
+	su.mutation.SetFirstname(s)
 	return su
 }
 
-// SetLastName sets the "last_name" field.
-func (su *StudentUpdate) SetLastName(s string) *StudentUpdate {
-	su.mutation.SetLastName(s)
+// SetLastname sets the "lastname" field.
+func (su *StudentUpdate) SetLastname(s string) *StudentUpdate {
+	su.mutation.SetLastname(s)
 	return su
 }
 
@@ -160,14 +160,14 @@ func (su *StudentUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (su *StudentUpdate) check() error {
-	if v, ok := su.mutation.FirstName(); ok {
-		if err := student.FirstNameValidator(v); err != nil {
-			return &ValidationError{Name: "first_name", err: fmt.Errorf("ent: validator failed for field \"first_name\": %w", err)}
+	if v, ok := su.mutation.Firstname(); ok {
+		if err := student.FirstnameValidator(v); err != nil {
+			return &ValidationError{Name: "firstname", err: fmt.Errorf("ent: validator failed for field \"firstname\": %w", err)}
 		}
 	}
-	if v, ok := su.mutation.LastName(); ok {
-		if err := student.LastNameValidator(v); err != nil {
-			return &ValidationError{Name: "last_name", err: fmt.Errorf("ent: validator failed for field \"last_name\": %w", err)}
+	if v, ok := su.mutation.Lastname(); ok {
+		if err := student.LastnameValidator(v); err != nil {
+			return &ValidationError{Name: "lastname", err: fmt.Errorf("ent: validator failed for field \"lastname\": %w", err)}
 		}
 	}
 	if v, ok := su.mutation.Email(); ok {
@@ -189,7 +189,7 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Table:   student.Table,
 			Columns: student.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: student.FieldID,
 			},
 		},
@@ -201,18 +201,18 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := su.mutation.FirstName(); ok {
+	if value, ok := su.mutation.Firstname(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldFirstName,
+			Column: student.FieldFirstname,
 		})
 	}
-	if value, ok := su.mutation.LastName(); ok {
+	if value, ok := su.mutation.Lastname(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldLastName,
+			Column: student.FieldLastname,
 		})
 	}
 	if value, ok := su.mutation.Email(); ok {
@@ -276,15 +276,15 @@ type StudentUpdateOne struct {
 	mutation *StudentMutation
 }
 
-// SetFirstName sets the "first_name" field.
-func (suo *StudentUpdateOne) SetFirstName(s string) *StudentUpdateOne {
-	suo.mutation.SetFirstName(s)
+// SetFirstname sets the "firstname" field.
+func (suo *StudentUpdateOne) SetFirstname(s string) *StudentUpdateOne {
+	suo.mutation.SetFirstname(s)
 	return suo
 }
 
-// SetLastName sets the "last_name" field.
-func (suo *StudentUpdateOne) SetLastName(s string) *StudentUpdateOne {
-	suo.mutation.SetLastName(s)
+// SetLastname sets the "lastname" field.
+func (suo *StudentUpdateOne) SetLastname(s string) *StudentUpdateOne {
+	suo.mutation.SetLastname(s)
 	return suo
 }
 
@@ -416,14 +416,14 @@ func (suo *StudentUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (suo *StudentUpdateOne) check() error {
-	if v, ok := suo.mutation.FirstName(); ok {
-		if err := student.FirstNameValidator(v); err != nil {
-			return &ValidationError{Name: "first_name", err: fmt.Errorf("ent: validator failed for field \"first_name\": %w", err)}
+	if v, ok := suo.mutation.Firstname(); ok {
+		if err := student.FirstnameValidator(v); err != nil {
+			return &ValidationError{Name: "firstname", err: fmt.Errorf("ent: validator failed for field \"firstname\": %w", err)}
 		}
 	}
-	if v, ok := suo.mutation.LastName(); ok {
-		if err := student.LastNameValidator(v); err != nil {
-			return &ValidationError{Name: "last_name", err: fmt.Errorf("ent: validator failed for field \"last_name\": %w", err)}
+	if v, ok := suo.mutation.Lastname(); ok {
+		if err := student.LastnameValidator(v); err != nil {
+			return &ValidationError{Name: "lastname", err: fmt.Errorf("ent: validator failed for field \"lastname\": %w", err)}
 		}
 	}
 	if v, ok := suo.mutation.Email(); ok {
@@ -445,7 +445,7 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 			Table:   student.Table,
 			Columns: student.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: student.FieldID,
 			},
 		},
@@ -474,18 +474,18 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 			}
 		}
 	}
-	if value, ok := suo.mutation.FirstName(); ok {
+	if value, ok := suo.mutation.Firstname(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldFirstName,
+			Column: student.FieldFirstname,
 		})
 	}
-	if value, ok := suo.mutation.LastName(); ok {
+	if value, ok := suo.mutation.Lastname(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: student.FieldLastName,
+			Column: student.FieldLastname,
 		})
 	}
 	if value, ok := suo.mutation.Email(); ok {

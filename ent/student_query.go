@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // StudentQuery is the builder for querying Student entities.
@@ -84,8 +85,8 @@ func (sq *StudentQuery) FirstX(ctx context.Context) *Student {
 
 // FirstID returns the first Student ID from the query.
 // Returns a *NotFoundError when no Student ID was found.
-func (sq *StudentQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (sq *StudentQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = sq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -97,7 +98,7 @@ func (sq *StudentQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (sq *StudentQuery) FirstIDX(ctx context.Context) int {
+func (sq *StudentQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := sq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -135,8 +136,8 @@ func (sq *StudentQuery) OnlyX(ctx context.Context) *Student {
 // OnlyID is like Only, but returns the only Student ID in the query.
 // Returns a *NotSingularError when exactly one Student ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (sq *StudentQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (sq *StudentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = sq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -152,7 +153,7 @@ func (sq *StudentQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (sq *StudentQuery) OnlyIDX(ctx context.Context) int {
+func (sq *StudentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := sq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -178,8 +179,8 @@ func (sq *StudentQuery) AllX(ctx context.Context) []*Student {
 }
 
 // IDs executes the query and returns a list of Student IDs.
-func (sq *StudentQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
+func (sq *StudentQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	var ids []uuid.UUID
 	if err := sq.Select(student.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -187,7 +188,7 @@ func (sq *StudentQuery) IDs(ctx context.Context) ([]int, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (sq *StudentQuery) IDsX(ctx context.Context) []int {
+func (sq *StudentQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := sq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -253,12 +254,12 @@ func (sq *StudentQuery) Clone() *StudentQuery {
 // Example:
 //
 //	var v []struct {
-//		FirstName string `json:"first_name,omitempty"`
+//		Firstname string `json:"firstname,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Student.Query().
-//		GroupBy(student.FieldFirstName).
+//		GroupBy(student.FieldFirstname).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -280,11 +281,11 @@ func (sq *StudentQuery) GroupBy(field string, fields ...string) *StudentGroupBy 
 // Example:
 //
 //	var v []struct {
-//		FirstName string `json:"first_name,omitempty"`
+//		Firstname string `json:"firstname,omitempty"`
 //	}
 //
 //	client.Student.Query().
-//		Select(student.FieldFirstName).
+//		Select(student.FieldFirstname).
 //		Scan(ctx, &v)
 //
 func (sq *StudentQuery) Select(fields ...string) *StudentSelect {
@@ -353,7 +354,7 @@ func (sq *StudentQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   student.Table,
 			Columns: student.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: student.FieldID,
 			},
 		},

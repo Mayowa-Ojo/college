@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	"entgo.io/ent"
 )
 
@@ -30,9 +32,9 @@ type StudentMutation struct {
 	config
 	op               Op
 	typ              string
-	id               *int
-	first_name       *string
-	last_name        *string
+	id               *uuid.UUID
+	firstname        *string
+	lastname         *string
 	email            *string
 	admission_number *string
 	year             *int
@@ -65,7 +67,7 @@ func newStudentMutation(c config, op Op, opts ...studentOption) *StudentMutation
 }
 
 // withStudentID sets the ID field of the mutation.
-func withStudentID(id int) studentOption {
+func withStudentID(id uuid.UUID) studentOption {
 	return func(m *StudentMutation) {
 		var (
 			err   error
@@ -115,85 +117,91 @@ func (m StudentMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Student entities.
+func (m *StudentMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *StudentMutation) ID() (id int, exists bool) {
+func (m *StudentMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
 	return *m.id, true
 }
 
-// SetFirstName sets the "first_name" field.
-func (m *StudentMutation) SetFirstName(s string) {
-	m.first_name = &s
+// SetFirstname sets the "firstname" field.
+func (m *StudentMutation) SetFirstname(s string) {
+	m.firstname = &s
 }
 
-// FirstName returns the value of the "first_name" field in the mutation.
-func (m *StudentMutation) FirstName() (r string, exists bool) {
-	v := m.first_name
+// Firstname returns the value of the "firstname" field in the mutation.
+func (m *StudentMutation) Firstname() (r string, exists bool) {
+	v := m.firstname
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldFirstName returns the old "first_name" field's value of the Student entity.
+// OldFirstname returns the old "firstname" field's value of the Student entity.
 // If the Student object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *StudentMutation) OldFirstName(ctx context.Context) (v string, err error) {
+func (m *StudentMutation) OldFirstname(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldFirstName is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldFirstname is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldFirstName requires an ID field in the mutation")
+		return v, fmt.Errorf("OldFirstname requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFirstName: %w", err)
+		return v, fmt.Errorf("querying old value for OldFirstname: %w", err)
 	}
-	return oldValue.FirstName, nil
+	return oldValue.Firstname, nil
 }
 
-// ResetFirstName resets all changes to the "first_name" field.
-func (m *StudentMutation) ResetFirstName() {
-	m.first_name = nil
+// ResetFirstname resets all changes to the "firstname" field.
+func (m *StudentMutation) ResetFirstname() {
+	m.firstname = nil
 }
 
-// SetLastName sets the "last_name" field.
-func (m *StudentMutation) SetLastName(s string) {
-	m.last_name = &s
+// SetLastname sets the "lastname" field.
+func (m *StudentMutation) SetLastname(s string) {
+	m.lastname = &s
 }
 
-// LastName returns the value of the "last_name" field in the mutation.
-func (m *StudentMutation) LastName() (r string, exists bool) {
-	v := m.last_name
+// Lastname returns the value of the "lastname" field in the mutation.
+func (m *StudentMutation) Lastname() (r string, exists bool) {
+	v := m.lastname
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldLastName returns the old "last_name" field's value of the Student entity.
+// OldLastname returns the old "lastname" field's value of the Student entity.
 // If the Student object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *StudentMutation) OldLastName(ctx context.Context) (v string, err error) {
+func (m *StudentMutation) OldLastname(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldLastName is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldLastname is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldLastName requires an ID field in the mutation")
+		return v, fmt.Errorf("OldLastname requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLastName: %w", err)
+		return v, fmt.Errorf("querying old value for OldLastname: %w", err)
 	}
-	return oldValue.LastName, nil
+	return oldValue.Lastname, nil
 }
 
-// ResetLastName resets all changes to the "last_name" field.
-func (m *StudentMutation) ResetLastName() {
-	m.last_name = nil
+// ResetLastname resets all changes to the "lastname" field.
+func (m *StudentMutation) ResetLastname() {
+	m.lastname = nil
 }
 
 // SetEmail sets the "email" field.
@@ -416,11 +424,11 @@ func (m *StudentMutation) Type() string {
 // AddedFields().
 func (m *StudentMutation) Fields() []string {
 	fields := make([]string, 0, 7)
-	if m.first_name != nil {
-		fields = append(fields, student.FieldFirstName)
+	if m.firstname != nil {
+		fields = append(fields, student.FieldFirstname)
 	}
-	if m.last_name != nil {
-		fields = append(fields, student.FieldLastName)
+	if m.lastname != nil {
+		fields = append(fields, student.FieldLastname)
 	}
 	if m.email != nil {
 		fields = append(fields, student.FieldEmail)
@@ -445,10 +453,10 @@ func (m *StudentMutation) Fields() []string {
 // schema.
 func (m *StudentMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case student.FieldFirstName:
-		return m.FirstName()
-	case student.FieldLastName:
-		return m.LastName()
+	case student.FieldFirstname:
+		return m.Firstname()
+	case student.FieldLastname:
+		return m.Lastname()
 	case student.FieldEmail:
 		return m.Email()
 	case student.FieldAdmissionNumber:
@@ -468,10 +476,10 @@ func (m *StudentMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *StudentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case student.FieldFirstName:
-		return m.OldFirstName(ctx)
-	case student.FieldLastName:
-		return m.OldLastName(ctx)
+	case student.FieldFirstname:
+		return m.OldFirstname(ctx)
+	case student.FieldLastname:
+		return m.OldLastname(ctx)
 	case student.FieldEmail:
 		return m.OldEmail(ctx)
 	case student.FieldAdmissionNumber:
@@ -491,19 +499,19 @@ func (m *StudentMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *StudentMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case student.FieldFirstName:
+	case student.FieldFirstname:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetFirstName(v)
+		m.SetFirstname(v)
 		return nil
-	case student.FieldLastName:
+	case student.FieldLastname:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetLastName(v)
+		m.SetLastname(v)
 		return nil
 	case student.FieldEmail:
 		v, ok := value.(string)
@@ -604,11 +612,11 @@ func (m *StudentMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *StudentMutation) ResetField(name string) error {
 	switch name {
-	case student.FieldFirstName:
-		m.ResetFirstName()
+	case student.FieldFirstname:
+		m.ResetFirstname()
 		return nil
-	case student.FieldLastName:
-		m.ResetLastName()
+	case student.FieldLastname:
+		m.ResetLastname()
 		return nil
 	case student.FieldEmail:
 		m.ResetEmail()

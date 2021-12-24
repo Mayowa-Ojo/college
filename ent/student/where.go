@@ -7,31 +7,32 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Student {
+func ID(id uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Student {
+func IDEQ(id uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Student {
+func IDNEQ(id uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
 	})
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Student {
+func IDIn(ids ...uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -48,7 +49,7 @@ func IDIn(ids ...int) predicate.Student {
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Student {
+func IDNotIn(ids ...uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -65,44 +66,44 @@ func IDNotIn(ids ...int) predicate.Student {
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Student {
+func IDGT(id uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
 	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Student {
+func IDGTE(id uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
 	})
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Student {
+func IDLT(id uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
 	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Student {
+func IDLTE(id uuid.UUID) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
 	})
 }
 
-// FirstName applies equality check predicate on the "first_name" field. It's identical to FirstNameEQ.
-func FirstName(v string) predicate.Student {
+// Firstname applies equality check predicate on the "firstname" field. It's identical to FirstnameEQ.
+func Firstname(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldFirstName), v))
+		s.Where(sql.EQ(s.C(FieldFirstname), v))
 	})
 }
 
-// LastName applies equality check predicate on the "last_name" field. It's identical to LastNameEQ.
-func LastName(v string) predicate.Student {
+// Lastname applies equality check predicate on the "lastname" field. It's identical to LastnameEQ.
+func Lastname(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldLastName), v))
+		s.Where(sql.EQ(s.C(FieldLastname), v))
 	})
 }
 
@@ -141,22 +142,22 @@ func UpdatedAt(v time.Time) predicate.Student {
 	})
 }
 
-// FirstNameEQ applies the EQ predicate on the "first_name" field.
-func FirstNameEQ(v string) predicate.Student {
+// FirstnameEQ applies the EQ predicate on the "firstname" field.
+func FirstnameEQ(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldFirstName), v))
+		s.Where(sql.EQ(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameNEQ applies the NEQ predicate on the "first_name" field.
-func FirstNameNEQ(v string) predicate.Student {
+// FirstnameNEQ applies the NEQ predicate on the "firstname" field.
+func FirstnameNEQ(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldFirstName), v))
+		s.Where(sql.NEQ(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameIn applies the In predicate on the "first_name" field.
-func FirstNameIn(vs ...string) predicate.Student {
+// FirstnameIn applies the In predicate on the "firstname" field.
+func FirstnameIn(vs ...string) predicate.Student {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -168,12 +169,12 @@ func FirstNameIn(vs ...string) predicate.Student {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldFirstName), v...))
+		s.Where(sql.In(s.C(FieldFirstname), v...))
 	})
 }
 
-// FirstNameNotIn applies the NotIn predicate on the "first_name" field.
-func FirstNameNotIn(vs ...string) predicate.Student {
+// FirstnameNotIn applies the NotIn predicate on the "firstname" field.
+func FirstnameNotIn(vs ...string) predicate.Student {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -185,89 +186,89 @@ func FirstNameNotIn(vs ...string) predicate.Student {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldFirstName), v...))
+		s.Where(sql.NotIn(s.C(FieldFirstname), v...))
 	})
 }
 
-// FirstNameGT applies the GT predicate on the "first_name" field.
-func FirstNameGT(v string) predicate.Student {
+// FirstnameGT applies the GT predicate on the "firstname" field.
+func FirstnameGT(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldFirstName), v))
+		s.Where(sql.GT(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameGTE applies the GTE predicate on the "first_name" field.
-func FirstNameGTE(v string) predicate.Student {
+// FirstnameGTE applies the GTE predicate on the "firstname" field.
+func FirstnameGTE(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldFirstName), v))
+		s.Where(sql.GTE(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameLT applies the LT predicate on the "first_name" field.
-func FirstNameLT(v string) predicate.Student {
+// FirstnameLT applies the LT predicate on the "firstname" field.
+func FirstnameLT(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldFirstName), v))
+		s.Where(sql.LT(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameLTE applies the LTE predicate on the "first_name" field.
-func FirstNameLTE(v string) predicate.Student {
+// FirstnameLTE applies the LTE predicate on the "firstname" field.
+func FirstnameLTE(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldFirstName), v))
+		s.Where(sql.LTE(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameContains applies the Contains predicate on the "first_name" field.
-func FirstNameContains(v string) predicate.Student {
+// FirstnameContains applies the Contains predicate on the "firstname" field.
+func FirstnameContains(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldFirstName), v))
+		s.Where(sql.Contains(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameHasPrefix applies the HasPrefix predicate on the "first_name" field.
-func FirstNameHasPrefix(v string) predicate.Student {
+// FirstnameHasPrefix applies the HasPrefix predicate on the "firstname" field.
+func FirstnameHasPrefix(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldFirstName), v))
+		s.Where(sql.HasPrefix(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameHasSuffix applies the HasSuffix predicate on the "first_name" field.
-func FirstNameHasSuffix(v string) predicate.Student {
+// FirstnameHasSuffix applies the HasSuffix predicate on the "firstname" field.
+func FirstnameHasSuffix(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldFirstName), v))
+		s.Where(sql.HasSuffix(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameEqualFold applies the EqualFold predicate on the "first_name" field.
-func FirstNameEqualFold(v string) predicate.Student {
+// FirstnameEqualFold applies the EqualFold predicate on the "firstname" field.
+func FirstnameEqualFold(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldFirstName), v))
+		s.Where(sql.EqualFold(s.C(FieldFirstname), v))
 	})
 }
 
-// FirstNameContainsFold applies the ContainsFold predicate on the "first_name" field.
-func FirstNameContainsFold(v string) predicate.Student {
+// FirstnameContainsFold applies the ContainsFold predicate on the "firstname" field.
+func FirstnameContainsFold(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldFirstName), v))
+		s.Where(sql.ContainsFold(s.C(FieldFirstname), v))
 	})
 }
 
-// LastNameEQ applies the EQ predicate on the "last_name" field.
-func LastNameEQ(v string) predicate.Student {
+// LastnameEQ applies the EQ predicate on the "lastname" field.
+func LastnameEQ(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldLastName), v))
+		s.Where(sql.EQ(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameNEQ applies the NEQ predicate on the "last_name" field.
-func LastNameNEQ(v string) predicate.Student {
+// LastnameNEQ applies the NEQ predicate on the "lastname" field.
+func LastnameNEQ(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldLastName), v))
+		s.Where(sql.NEQ(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameIn applies the In predicate on the "last_name" field.
-func LastNameIn(vs ...string) predicate.Student {
+// LastnameIn applies the In predicate on the "lastname" field.
+func LastnameIn(vs ...string) predicate.Student {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -279,12 +280,12 @@ func LastNameIn(vs ...string) predicate.Student {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldLastName), v...))
+		s.Where(sql.In(s.C(FieldLastname), v...))
 	})
 }
 
-// LastNameNotIn applies the NotIn predicate on the "last_name" field.
-func LastNameNotIn(vs ...string) predicate.Student {
+// LastnameNotIn applies the NotIn predicate on the "lastname" field.
+func LastnameNotIn(vs ...string) predicate.Student {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -296,70 +297,70 @@ func LastNameNotIn(vs ...string) predicate.Student {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldLastName), v...))
+		s.Where(sql.NotIn(s.C(FieldLastname), v...))
 	})
 }
 
-// LastNameGT applies the GT predicate on the "last_name" field.
-func LastNameGT(v string) predicate.Student {
+// LastnameGT applies the GT predicate on the "lastname" field.
+func LastnameGT(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldLastName), v))
+		s.Where(sql.GT(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameGTE applies the GTE predicate on the "last_name" field.
-func LastNameGTE(v string) predicate.Student {
+// LastnameGTE applies the GTE predicate on the "lastname" field.
+func LastnameGTE(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldLastName), v))
+		s.Where(sql.GTE(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameLT applies the LT predicate on the "last_name" field.
-func LastNameLT(v string) predicate.Student {
+// LastnameLT applies the LT predicate on the "lastname" field.
+func LastnameLT(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldLastName), v))
+		s.Where(sql.LT(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameLTE applies the LTE predicate on the "last_name" field.
-func LastNameLTE(v string) predicate.Student {
+// LastnameLTE applies the LTE predicate on the "lastname" field.
+func LastnameLTE(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldLastName), v))
+		s.Where(sql.LTE(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameContains applies the Contains predicate on the "last_name" field.
-func LastNameContains(v string) predicate.Student {
+// LastnameContains applies the Contains predicate on the "lastname" field.
+func LastnameContains(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldLastName), v))
+		s.Where(sql.Contains(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameHasPrefix applies the HasPrefix predicate on the "last_name" field.
-func LastNameHasPrefix(v string) predicate.Student {
+// LastnameHasPrefix applies the HasPrefix predicate on the "lastname" field.
+func LastnameHasPrefix(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldLastName), v))
+		s.Where(sql.HasPrefix(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameHasSuffix applies the HasSuffix predicate on the "last_name" field.
-func LastNameHasSuffix(v string) predicate.Student {
+// LastnameHasSuffix applies the HasSuffix predicate on the "lastname" field.
+func LastnameHasSuffix(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldLastName), v))
+		s.Where(sql.HasSuffix(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameEqualFold applies the EqualFold predicate on the "last_name" field.
-func LastNameEqualFold(v string) predicate.Student {
+// LastnameEqualFold applies the EqualFold predicate on the "lastname" field.
+func LastnameEqualFold(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldLastName), v))
+		s.Where(sql.EqualFold(s.C(FieldLastname), v))
 	})
 }
 
-// LastNameContainsFold applies the ContainsFold predicate on the "last_name" field.
-func LastNameContainsFold(v string) predicate.Student {
+// LastnameContainsFold applies the ContainsFold predicate on the "lastname" field.
+func LastnameContainsFold(v string) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldLastName), v))
+		s.Where(sql.ContainsFold(s.C(FieldLastname), v))
 	})
 }
 

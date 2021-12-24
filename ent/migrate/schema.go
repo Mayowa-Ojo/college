@@ -10,9 +10,9 @@ import (
 var (
 	// StudentsColumns holds the columns for the "students" table.
 	StudentsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "first_name", Type: field.TypeString, Size: 250},
-		{Name: "last_name", Type: field.TypeString, Size: 250},
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "firstname", Type: field.TypeString, Size: 250},
+		{Name: "lastname", Type: field.TypeString, Size: 250},
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "admission_number", Type: field.TypeString},
 		{Name: "year", Type: field.TypeInt},

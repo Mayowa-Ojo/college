@@ -4,6 +4,8 @@ package student
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -11,10 +13,10 @@ const (
 	Label = "student"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldFirstName holds the string denoting the first_name field in the database.
-	FieldFirstName = "first_name"
-	// FieldLastName holds the string denoting the last_name field in the database.
-	FieldLastName = "last_name"
+	// FieldFirstname holds the string denoting the firstname field in the database.
+	FieldFirstname = "firstname"
+	// FieldLastname holds the string denoting the lastname field in the database.
+	FieldLastname = "lastname"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
 	// FieldAdmissionNumber holds the string denoting the admission_number field in the database.
@@ -32,8 +34,8 @@ const (
 // Columns holds all SQL columns for student fields.
 var Columns = []string{
 	FieldID,
-	FieldFirstName,
-	FieldLastName,
+	FieldFirstname,
+	FieldLastname,
 	FieldEmail,
 	FieldAdmissionNumber,
 	FieldYear,
@@ -52,10 +54,10 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// FirstNameValidator is a validator for the "first_name" field. It is called by the builders before save.
-	FirstNameValidator func(string) error
-	// LastNameValidator is a validator for the "last_name" field. It is called by the builders before save.
-	LastNameValidator func(string) error
+	// FirstnameValidator is a validator for the "firstname" field. It is called by the builders before save.
+	FirstnameValidator func(string) error
+	// LastnameValidator is a validator for the "lastname" field. It is called by the builders before save.
+	LastnameValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
 	// YearValidator is a validator for the "year" field. It is called by the builders before save.
@@ -66,4 +68,6 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
 )

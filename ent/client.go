@@ -13,6 +13,7 @@ import (
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 // Client is the client that holds all ent builders.
@@ -161,7 +162,7 @@ func (c *StudentClient) UpdateOne(s *Student) *StudentUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *StudentClient) UpdateOneID(id int) *StudentUpdateOne {
+func (c *StudentClient) UpdateOneID(id uuid.UUID) *StudentUpdateOne {
 	mutation := newStudentMutation(c.config, OpUpdateOne, withStudentID(id))
 	return &StudentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -178,7 +179,7 @@ func (c *StudentClient) DeleteOne(s *Student) *StudentDeleteOne {
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *StudentClient) DeleteOneID(id int) *StudentDeleteOne {
+func (c *StudentClient) DeleteOneID(id uuid.UUID) *StudentDeleteOne {
 	builder := c.Delete().Where(student.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -193,12 +194,12 @@ func (c *StudentClient) Query() *StudentQuery {
 }
 
 // Get returns a Student entity by its id.
-func (c *StudentClient) Get(ctx context.Context, id int) (*Student, error) {
+func (c *StudentClient) Get(ctx context.Context, id uuid.UUID) (*Student, error) {
 	return c.Query().Where(student.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *StudentClient) GetX(ctx context.Context, id int) *Student {
+func (c *StudentClient) GetX(ctx context.Context, id uuid.UUID) *Student {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
