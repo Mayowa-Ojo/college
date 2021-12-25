@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -36,6 +37,34 @@ func (dc *DepartmentCreate) SetCode(s string) *DepartmentCreate {
 // SetTelephone sets the "telephone" field.
 func (dc *DepartmentCreate) SetTelephone(s string) *DepartmentCreate {
 	dc.mutation.SetTelephone(s)
+	return dc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (dc *DepartmentCreate) SetCreatedAt(t time.Time) *DepartmentCreate {
+	dc.mutation.SetCreatedAt(t)
+	return dc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (dc *DepartmentCreate) SetNillableCreatedAt(t *time.Time) *DepartmentCreate {
+	if t != nil {
+		dc.SetCreatedAt(*t)
+	}
+	return dc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (dc *DepartmentCreate) SetUpdatedAt(t time.Time) *DepartmentCreate {
+	dc.mutation.SetUpdatedAt(t)
+	return dc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (dc *DepartmentCreate) SetNillableUpdatedAt(t *time.Time) *DepartmentCreate {
+	if t != nil {
+		dc.SetUpdatedAt(*t)
+	}
 	return dc
 }
 
@@ -131,6 +160,14 @@ func (dc *DepartmentCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (dc *DepartmentCreate) defaults() {
+	if _, ok := dc.mutation.CreatedAt(); !ok {
+		v := department.DefaultCreatedAt()
+		dc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := dc.mutation.UpdatedAt(); !ok {
+		v := department.DefaultUpdatedAt()
+		dc.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := dc.mutation.ID(); !ok {
 		v := department.DefaultID()
 		dc.mutation.SetID(v)
@@ -162,6 +199,12 @@ func (dc *DepartmentCreate) check() error {
 		if err := department.TelephoneValidator(v); err != nil {
 			return &ValidationError{Name: "telephone", err: fmt.Errorf(`ent: validator failed for field "telephone": %w`, err)}
 		}
+	}
+	if _, ok := dc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+	}
+	if _, ok := dc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
 	}
 	return nil
 }
@@ -218,6 +261,22 @@ func (dc *DepartmentCreate) createSpec() (*Department, *sqlgraph.CreateSpec) {
 			Column: department.FieldTelephone,
 		})
 		_node.Telephone = value
+	}
+	if value, ok := dc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: department.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := dc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: department.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
 	}
 	if nodes := dc.mutation.StudentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

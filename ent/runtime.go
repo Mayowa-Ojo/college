@@ -29,6 +29,16 @@ func init() {
 	departmentDescTelephone := departmentFields[3].Descriptor()
 	// department.TelephoneValidator is a validator for the "telephone" field. It is called by the builders before save.
 	department.TelephoneValidator = departmentDescTelephone.Validators[0].(func(string) error)
+	// departmentDescCreatedAt is the schema descriptor for created_at field.
+	departmentDescCreatedAt := departmentFields[4].Descriptor()
+	// department.DefaultCreatedAt holds the default value on creation for the created_at field.
+	department.DefaultCreatedAt = departmentDescCreatedAt.Default.(func() time.Time)
+	// departmentDescUpdatedAt is the schema descriptor for updated_at field.
+	departmentDescUpdatedAt := departmentFields[5].Descriptor()
+	// department.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	department.DefaultUpdatedAt = departmentDescUpdatedAt.Default.(func() time.Time)
+	// department.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	department.UpdateDefaultUpdatedAt = departmentDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// departmentDescID is the schema descriptor for id field.
 	departmentDescID := departmentFields[0].Descriptor()
 	// department.DefaultID holds the default value on creation for the id field.

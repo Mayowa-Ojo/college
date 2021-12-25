@@ -3,6 +3,8 @@
 package department
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -17,6 +19,10 @@ const (
 	FieldCode = "code"
 	// FieldTelephone holds the string denoting the telephone field in the database.
 	FieldTelephone = "telephone"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// EdgeStudents holds the string denoting the students edge name in mutations.
 	EdgeStudents = "students"
 	// Table holds the table name of the department in the database.
@@ -36,6 +42,8 @@ var Columns = []string{
 	FieldName,
 	FieldCode,
 	FieldTelephone,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -55,6 +63,12 @@ var (
 	CodeValidator func(string) error
 	// TelephoneValidator is a validator for the "telephone" field. It is called by the builders before save.
 	TelephoneValidator func(string) error
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )

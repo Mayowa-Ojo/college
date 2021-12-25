@@ -8,6 +8,7 @@ import (
 	"college/ent/student"
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -43,6 +44,26 @@ func (du *DepartmentUpdate) SetCode(s string) *DepartmentUpdate {
 // SetTelephone sets the "telephone" field.
 func (du *DepartmentUpdate) SetTelephone(s string) *DepartmentUpdate {
 	du.mutation.SetTelephone(s)
+	return du
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (du *DepartmentUpdate) SetCreatedAt(t time.Time) *DepartmentUpdate {
+	du.mutation.SetCreatedAt(t)
+	return du
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (du *DepartmentUpdate) SetNillableCreatedAt(t *time.Time) *DepartmentUpdate {
+	if t != nil {
+		du.SetCreatedAt(*t)
+	}
+	return du
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (du *DepartmentUpdate) SetUpdatedAt(t time.Time) *DepartmentUpdate {
+	du.mutation.SetUpdatedAt(t)
 	return du
 }
 
@@ -93,6 +114,7 @@ func (du *DepartmentUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	du.defaults()
 	if len(du.hooks) == 0 {
 		if err = du.check(); err != nil {
 			return 0, err
@@ -144,6 +166,14 @@ func (du *DepartmentUpdate) Exec(ctx context.Context) error {
 func (du *DepartmentUpdate) ExecX(ctx context.Context) {
 	if err := du.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (du *DepartmentUpdate) defaults() {
+	if _, ok := du.mutation.UpdatedAt(); !ok {
+		v := department.UpdateDefaultUpdatedAt()
+		du.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -204,6 +234,20 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: department.FieldTelephone,
+		})
+	}
+	if value, ok := du.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: department.FieldCreatedAt,
+		})
+	}
+	if value, ok := du.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: department.FieldUpdatedAt,
 		})
 	}
 	if du.mutation.StudentsCleared() {
@@ -297,6 +341,26 @@ func (duo *DepartmentUpdateOne) SetTelephone(s string) *DepartmentUpdateOne {
 	return duo
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (duo *DepartmentUpdateOne) SetCreatedAt(t time.Time) *DepartmentUpdateOne {
+	duo.mutation.SetCreatedAt(t)
+	return duo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (duo *DepartmentUpdateOne) SetNillableCreatedAt(t *time.Time) *DepartmentUpdateOne {
+	if t != nil {
+		duo.SetCreatedAt(*t)
+	}
+	return duo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (duo *DepartmentUpdateOne) SetUpdatedAt(t time.Time) *DepartmentUpdateOne {
+	duo.mutation.SetUpdatedAt(t)
+	return duo
+}
+
 // AddStudentIDs adds the "students" edge to the Student entity by IDs.
 func (duo *DepartmentUpdateOne) AddStudentIDs(ids ...uuid.UUID) *DepartmentUpdateOne {
 	duo.mutation.AddStudentIDs(ids...)
@@ -351,6 +415,7 @@ func (duo *DepartmentUpdateOne) Save(ctx context.Context) (*Department, error) {
 		err  error
 		node *Department
 	)
+	duo.defaults()
 	if len(duo.hooks) == 0 {
 		if err = duo.check(); err != nil {
 			return nil, err
@@ -402,6 +467,14 @@ func (duo *DepartmentUpdateOne) Exec(ctx context.Context) error {
 func (duo *DepartmentUpdateOne) ExecX(ctx context.Context) {
 	if err := duo.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (duo *DepartmentUpdateOne) defaults() {
+	if _, ok := duo.mutation.UpdatedAt(); !ok {
+		v := department.UpdateDefaultUpdatedAt()
+		duo.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -479,6 +552,20 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 			Type:   field.TypeString,
 			Value:  value,
 			Column: department.FieldTelephone,
+		})
+	}
+	if value, ok := duo.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: department.FieldCreatedAt,
+		})
+	}
+	if value, ok := duo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: department.FieldUpdatedAt,
 		})
 	}
 	if duo.mutation.StudentsCleared() {

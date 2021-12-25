@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -16,9 +18,11 @@ type Department struct {
 func (Department) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(func() uuid.UUID { return uuid.New() }).Unique().Immutable(),
-		field.String("name").MaxLen(250),
+		field.String("name").MaxLen(250).Unique(),
 		field.String("code").MaxLen(5),
 		field.String("telephone").MaxLen(15),
+		field.Time("created_at").Default(time.Now),
+		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
 

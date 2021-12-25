@@ -6,6 +6,7 @@ import (
 	"college/ent/department"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
@@ -22,6 +23,10 @@ type Department struct {
 	Code string `json:"code,omitempty"`
 	// Telephone holds the value of the "telephone" field.
 	Telephone string `json:"telephone,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the DepartmentQuery when eager-loading is set.
 	Edges DepartmentEdges `json:"edges"`
@@ -52,6 +57,8 @@ func (*Department) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case department.FieldName, department.FieldCode, department.FieldTelephone:
 			values[i] = new(sql.NullString)
+		case department.FieldCreatedAt, department.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		case department.FieldID:
 			values[i] = new(uuid.UUID)
 		default:
@@ -93,6 +100,18 @@ func (d *Department) assignValues(columns []string, values []interface{}) error 
 			} else if value.Valid {
 				d.Telephone = value.String
 			}
+		case department.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				d.CreatedAt = value.Time
+			}
+		case department.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				d.UpdatedAt = value.Time
+			}
 		}
 	}
 	return nil
@@ -132,6 +151,10 @@ func (d *Department) String() string {
 	builder.WriteString(d.Code)
 	builder.WriteString(", telephone=")
 	builder.WriteString(d.Telephone)
+	builder.WriteString(", created_at=")
+	builder.WriteString(d.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(d.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -24,6 +24,8 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 250},
 		{Name: "code", Type: field.TypeString, Size: 5},
 		{Name: "telephone", Type: field.TypeString, Size: 15},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// DepartmentsTable holds the schema information for the "departments" table.
 	DepartmentsTable = &schema.Table{

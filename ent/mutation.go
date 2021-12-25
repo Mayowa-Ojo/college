@@ -270,6 +270,8 @@ type DepartmentMutation struct {
 	name            *string
 	code            *string
 	telephone       *string
+	created_at      *time.Time
+	updated_at      *time.Time
 	clearedFields   map[string]struct{}
 	students        map[uuid.UUID]struct{}
 	removedstudents map[uuid.UUID]struct{}
@@ -472,6 +474,78 @@ func (m *DepartmentMutation) ResetTelephone() {
 	m.telephone = nil
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (m *DepartmentMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *DepartmentMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Department entity.
+// If the Department object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DepartmentMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *DepartmentMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *DepartmentMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *DepartmentMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Department entity.
+// If the Department object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DepartmentMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *DepartmentMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
 // AddStudentIDs adds the "students" edge to the Student entity by ids.
 func (m *DepartmentMutation) AddStudentIDs(ids ...uuid.UUID) {
 	if m.students == nil {
@@ -545,7 +619,7 @@ func (m *DepartmentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DepartmentMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 5)
 	if m.name != nil {
 		fields = append(fields, department.FieldName)
 	}
@@ -554,6 +628,12 @@ func (m *DepartmentMutation) Fields() []string {
 	}
 	if m.telephone != nil {
 		fields = append(fields, department.FieldTelephone)
+	}
+	if m.created_at != nil {
+		fields = append(fields, department.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, department.FieldUpdatedAt)
 	}
 	return fields
 }
@@ -569,6 +649,10 @@ func (m *DepartmentMutation) Field(name string) (ent.Value, bool) {
 		return m.Code()
 	case department.FieldTelephone:
 		return m.Telephone()
+	case department.FieldCreatedAt:
+		return m.CreatedAt()
+	case department.FieldUpdatedAt:
+		return m.UpdatedAt()
 	}
 	return nil, false
 }
@@ -584,6 +668,10 @@ func (m *DepartmentMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldCode(ctx)
 	case department.FieldTelephone:
 		return m.OldTelephone(ctx)
+	case department.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case department.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Department field %s", name)
 }
@@ -613,6 +701,20 @@ func (m *DepartmentMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTelephone(v)
+		return nil
+	case department.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case department.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Department field %s", name)
@@ -671,6 +773,12 @@ func (m *DepartmentMutation) ResetField(name string) error {
 		return nil
 	case department.FieldTelephone:
 		m.ResetTelephone()
+		return nil
+	case department.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case department.FieldUpdatedAt:
+		m.ResetUpdatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Department field %s", name)
