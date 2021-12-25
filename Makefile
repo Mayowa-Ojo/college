@@ -1,17 +1,20 @@
 # commands
 
-.PHONY: run build clean run-build ent-gen ent-init ent-describe
+.PHONY: run run-migrate-down build clean run-build ent-gen ent-init ent-describe
 
 PARSE_ARGS = $(filter-out $@,$(MAKECMDGOALS))
 
 run:
-	go run main.go
+	go run cmd/college/main.go
+
+run-migrate-down:
+	go run cmd/college/main.go -migrate-down
 
 build: clean
-	go build -o dist/ent-demo
+	go build -o dist/college ./cmd/college
 
 run-build: build
-	./dist/ent-demo
+	./dist/college
 
 clean:
 	rm -rf dist
