@@ -1,4 +1,4 @@
-package main
+package college
 
 import (
 	"college/ent"
@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -39,5 +40,16 @@ func SchemaMigrateDown(ctx context.Context, client *ent.Client) {
 		migrate.WithDropColumn(true),
 	); err != nil {
 		log.Fatalf("[ENT]: error running migration %s", err)
+	}
+}
+
+func DumpMigrations(ctx context.Context, client *ent.Client) {
+	file, err := os.Create("migrations.sql")
+	if err != nil {
+		log.Fatalf("[ENT]: error reading/creating migrations file %s", err)
+	}
+
+	if err := client.Schema.WriteTo(ctx, file); err != nil {
+		log.Fatalf("[ENT]: error writing migrations to file %s", err)
 	}
 }
