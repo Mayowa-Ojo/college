@@ -3,9 +3,8 @@
 package ent
 
 import (
-	"college/ent/department"
 	"college/ent/predicate"
-	"college/ent/student"
+	"college/ent/staff"
 	"context"
 	"errors"
 	"fmt"
@@ -14,93 +13,68 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
-// StudentQuery is the builder for querying Student entities.
-type StudentQuery struct {
+// StaffQuery is the builder for querying Staff entities.
+type StaffQuery struct {
 	config
 	limit      *int
 	offset     *int
 	unique     *bool
 	order      []OrderFunc
 	fields     []string
-	predicates []predicate.Student
-	// eager-loading edges.
-	withDepartment *DepartmentQuery
+	predicates []predicate.Staff
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the StudentQuery builder.
-func (sq *StudentQuery) Where(ps ...predicate.Student) *StudentQuery {
+// Where adds a new predicate for the StaffQuery builder.
+func (sq *StaffQuery) Where(ps ...predicate.Staff) *StaffQuery {
 	sq.predicates = append(sq.predicates, ps...)
 	return sq
 }
 
 // Limit adds a limit step to the query.
-func (sq *StudentQuery) Limit(limit int) *StudentQuery {
+func (sq *StaffQuery) Limit(limit int) *StaffQuery {
 	sq.limit = &limit
 	return sq
 }
 
 // Offset adds an offset step to the query.
-func (sq *StudentQuery) Offset(offset int) *StudentQuery {
+func (sq *StaffQuery) Offset(offset int) *StaffQuery {
 	sq.offset = &offset
 	return sq
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (sq *StudentQuery) Unique(unique bool) *StudentQuery {
+func (sq *StaffQuery) Unique(unique bool) *StaffQuery {
 	sq.unique = &unique
 	return sq
 }
 
 // Order adds an order step to the query.
-func (sq *StudentQuery) Order(o ...OrderFunc) *StudentQuery {
+func (sq *StaffQuery) Order(o ...OrderFunc) *StaffQuery {
 	sq.order = append(sq.order, o...)
 	return sq
 }
 
-// QueryDepartment chains the current query on the "department" edge.
-func (sq *StudentQuery) QueryDepartment() *DepartmentQuery {
-	query := &DepartmentQuery{config: sq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := sq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(student.Table, student.FieldID, selector),
-			sqlgraph.To(department.Table, department.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, student.DepartmentTable, student.DepartmentColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// First returns the first Student entity from the query.
-// Returns a *NotFoundError when no Student was found.
-func (sq *StudentQuery) First(ctx context.Context) (*Student, error) {
+// First returns the first Staff entity from the query.
+// Returns a *NotFoundError when no Staff was found.
+func (sq *StaffQuery) First(ctx context.Context) (*Staff, error) {
 	nodes, err := sq.Limit(1).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{student.Label}
+		return nil, &NotFoundError{staff.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (sq *StudentQuery) FirstX(ctx context.Context) *Student {
+func (sq *StaffQuery) FirstX(ctx context.Context) *Staff {
 	node, err := sq.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -108,22 +82,22 @@ func (sq *StudentQuery) FirstX(ctx context.Context) *Student {
 	return node
 }
 
-// FirstID returns the first Student ID from the query.
-// Returns a *NotFoundError when no Student ID was found.
-func (sq *StudentQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+// FirstID returns the first Staff ID from the query.
+// Returns a *NotFoundError when no Staff ID was found.
+func (sq *StaffQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = sq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (sq *StudentQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (sq *StaffQuery) FirstIDX(ctx context.Context) int {
 	id, err := sq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -131,10 +105,10 @@ func (sq *StudentQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single Student entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when exactly one Student entity is not found.
-// Returns a *NotFoundError when no Student entities are found.
-func (sq *StudentQuery) Only(ctx context.Context) (*Student, error) {
+// Only returns a single Staff entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when exactly one Staff entity is not found.
+// Returns a *NotFoundError when no Staff entities are found.
+func (sq *StaffQuery) Only(ctx context.Context) (*Staff, error) {
 	nodes, err := sq.Limit(2).All(ctx)
 	if err != nil {
 		return nil, err
@@ -143,14 +117,14 @@ func (sq *StudentQuery) Only(ctx context.Context) (*Student, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{student.Label}
+		return nil, &NotFoundError{staff.Label}
 	default:
-		return nil, &NotSingularError{student.Label}
+		return nil, &NotSingularError{staff.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (sq *StudentQuery) OnlyX(ctx context.Context) *Student {
+func (sq *StaffQuery) OnlyX(ctx context.Context) *Staff {
 	node, err := sq.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -158,11 +132,11 @@ func (sq *StudentQuery) OnlyX(ctx context.Context) *Student {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Student ID in the query.
-// Returns a *NotSingularError when exactly one Student ID is not found.
+// OnlyID is like Only, but returns the only Staff ID in the query.
+// Returns a *NotSingularError when exactly one Staff ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (sq *StudentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (sq *StaffQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = sq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -170,15 +144,15 @@ func (sq *StudentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = &NotSingularError{student.Label}
+		err = &NotSingularError{staff.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (sq *StudentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (sq *StaffQuery) OnlyIDX(ctx context.Context) int {
 	id, err := sq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -186,8 +160,8 @@ func (sq *StudentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of Students.
-func (sq *StudentQuery) All(ctx context.Context) ([]*Student, error) {
+// All executes the query and returns a list of Staffs.
+func (sq *StaffQuery) All(ctx context.Context) ([]*Staff, error) {
 	if err := sq.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
@@ -195,7 +169,7 @@ func (sq *StudentQuery) All(ctx context.Context) ([]*Student, error) {
 }
 
 // AllX is like All, but panics if an error occurs.
-func (sq *StudentQuery) AllX(ctx context.Context) []*Student {
+func (sq *StaffQuery) AllX(ctx context.Context) []*Staff {
 	nodes, err := sq.All(ctx)
 	if err != nil {
 		panic(err)
@@ -203,17 +177,17 @@ func (sq *StudentQuery) AllX(ctx context.Context) []*Student {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Student IDs.
-func (sq *StudentQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
-	var ids []uuid.UUID
-	if err := sq.Select(student.FieldID).Scan(ctx, &ids); err != nil {
+// IDs executes the query and returns a list of Staff IDs.
+func (sq *StaffQuery) IDs(ctx context.Context) ([]int, error) {
+	var ids []int
+	if err := sq.Select(staff.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (sq *StudentQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (sq *StaffQuery) IDsX(ctx context.Context) []int {
 	ids, err := sq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -222,7 +196,7 @@ func (sq *StudentQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (sq *StudentQuery) Count(ctx context.Context) (int, error) {
+func (sq *StaffQuery) Count(ctx context.Context) (int, error) {
 	if err := sq.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
@@ -230,7 +204,7 @@ func (sq *StudentQuery) Count(ctx context.Context) (int, error) {
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (sq *StudentQuery) CountX(ctx context.Context) int {
+func (sq *StaffQuery) CountX(ctx context.Context) int {
 	count, err := sq.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -239,7 +213,7 @@ func (sq *StudentQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (sq *StudentQuery) Exist(ctx context.Context) (bool, error) {
+func (sq *StaffQuery) Exist(ctx context.Context) (bool, error) {
 	if err := sq.prepareQuery(ctx); err != nil {
 		return false, err
 	}
@@ -247,7 +221,7 @@ func (sq *StudentQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (sq *StudentQuery) ExistX(ctx context.Context) bool {
+func (sq *StaffQuery) ExistX(ctx context.Context) bool {
 	exist, err := sq.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -255,53 +229,28 @@ func (sq *StudentQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the StudentQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the StaffQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (sq *StudentQuery) Clone() *StudentQuery {
+func (sq *StaffQuery) Clone() *StaffQuery {
 	if sq == nil {
 		return nil
 	}
-	return &StudentQuery{
-		config:         sq.config,
-		limit:          sq.limit,
-		offset:         sq.offset,
-		order:          append([]OrderFunc{}, sq.order...),
-		predicates:     append([]predicate.Student{}, sq.predicates...),
-		withDepartment: sq.withDepartment.Clone(),
+	return &StaffQuery{
+		config:     sq.config,
+		limit:      sq.limit,
+		offset:     sq.offset,
+		order:      append([]OrderFunc{}, sq.order...),
+		predicates: append([]predicate.Staff{}, sq.predicates...),
 		// clone intermediate query.
 		sql:  sq.sql.Clone(),
 		path: sq.path,
 	}
 }
 
-// WithDepartment tells the query-builder to eager-load the nodes that are connected to
-// the "department" edge. The optional arguments are used to configure the query builder of the edge.
-func (sq *StudentQuery) WithDepartment(opts ...func(*DepartmentQuery)) *StudentQuery {
-	query := &DepartmentQuery{config: sq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	sq.withDepartment = query
-	return sq
-}
-
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
-//
-// Example:
-//
-//	var v []struct {
-//		Firstname string `json:"firstname,omitempty"`
-//		Count int `json:"count,omitempty"`
-//	}
-//
-//	client.Student.Query().
-//		GroupBy(student.FieldFirstname).
-//		Aggregate(ent.Count()).
-//		Scan(ctx, &v)
-//
-func (sq *StudentQuery) GroupBy(field string, fields ...string) *StudentGroupBy {
-	group := &StudentGroupBy{config: sq.config}
+func (sq *StaffQuery) GroupBy(field string, fields ...string) *StaffGroupBy {
+	group := &StaffGroupBy{config: sq.config}
 	group.fields = append([]string{field}, fields...)
 	group.path = func(ctx context.Context) (prev *sql.Selector, err error) {
 		if err := sq.prepareQuery(ctx); err != nil {
@@ -314,25 +263,14 @@ func (sq *StudentQuery) GroupBy(field string, fields ...string) *StudentGroupBy 
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
-//
-// Example:
-//
-//	var v []struct {
-//		Firstname string `json:"firstname,omitempty"`
-//	}
-//
-//	client.Student.Query().
-//		Select(student.FieldFirstname).
-//		Scan(ctx, &v)
-//
-func (sq *StudentQuery) Select(fields ...string) *StudentSelect {
+func (sq *StaffQuery) Select(fields ...string) *StaffSelect {
 	sq.fields = append(sq.fields, fields...)
-	return &StudentSelect{StudentQuery: sq}
+	return &StaffSelect{StaffQuery: sq}
 }
 
-func (sq *StudentQuery) prepareQuery(ctx context.Context) error {
+func (sq *StaffQuery) prepareQuery(ctx context.Context) error {
 	for _, f := range sq.fields {
-		if !student.ValidColumn(f) {
+		if !staff.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -346,16 +284,13 @@ func (sq *StudentQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (sq *StudentQuery) sqlAll(ctx context.Context) ([]*Student, error) {
+func (sq *StaffQuery) sqlAll(ctx context.Context) ([]*Staff, error) {
 	var (
-		nodes       = []*Student{}
-		_spec       = sq.querySpec()
-		loadedTypes = [1]bool{
-			sq.withDepartment != nil,
-		}
+		nodes = []*Staff{}
+		_spec = sq.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
-		node := &Student{config: sq.config}
+		node := &Staff{config: sq.config}
 		nodes = append(nodes, node)
 		return node.scanValues(columns)
 	}
@@ -364,7 +299,6 @@ func (sq *StudentQuery) sqlAll(ctx context.Context) ([]*Student, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, sq.driver, _spec); err != nil {
@@ -373,42 +307,15 @@ func (sq *StudentQuery) sqlAll(ctx context.Context) ([]*Student, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-
-	if query := sq.withDepartment; query != nil {
-		ids := make([]uuid.UUID, 0, len(nodes))
-		nodeids := make(map[uuid.UUID][]*Student)
-		for i := range nodes {
-			fk := nodes[i].DepartmentID
-			if _, ok := nodeids[fk]; !ok {
-				ids = append(ids, fk)
-			}
-			nodeids[fk] = append(nodeids[fk], nodes[i])
-		}
-		query.Where(department.IDIn(ids...))
-		neighbors, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, n := range neighbors {
-			nodes, ok := nodeids[n.ID]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "department_id" returned %v`, n.ID)
-			}
-			for i := range nodes {
-				nodes[i].Edges.Department = n
-			}
-		}
-	}
-
 	return nodes, nil
 }
 
-func (sq *StudentQuery) sqlCount(ctx context.Context) (int, error) {
+func (sq *StaffQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := sq.querySpec()
 	return sqlgraph.CountNodes(ctx, sq.driver, _spec)
 }
 
-func (sq *StudentQuery) sqlExist(ctx context.Context) (bool, error) {
+func (sq *StaffQuery) sqlExist(ctx context.Context) (bool, error) {
 	n, err := sq.sqlCount(ctx)
 	if err != nil {
 		return false, fmt.Errorf("ent: check existence: %w", err)
@@ -416,14 +323,14 @@ func (sq *StudentQuery) sqlExist(ctx context.Context) (bool, error) {
 	return n > 0, nil
 }
 
-func (sq *StudentQuery) querySpec() *sqlgraph.QuerySpec {
+func (sq *StaffQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := &sqlgraph.QuerySpec{
 		Node: &sqlgraph.NodeSpec{
-			Table:   student.Table,
-			Columns: student.Columns,
+			Table:   staff.Table,
+			Columns: staff.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
-				Column: student.FieldID,
+				Type:   field.TypeInt,
+				Column: staff.FieldID,
 			},
 		},
 		From:   sq.sql,
@@ -434,9 +341,9 @@ func (sq *StudentQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := sq.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, student.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, staff.FieldID)
 		for i := range fields {
-			if fields[i] != student.FieldID {
+			if fields[i] != staff.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -464,12 +371,12 @@ func (sq *StudentQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (sq *StudentQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (sq *StaffQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(sq.driver.Dialect())
-	t1 := builder.Table(student.Table)
+	t1 := builder.Table(staff.Table)
 	columns := sq.fields
 	if len(columns) == 0 {
-		columns = student.Columns
+		columns = staff.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if sq.sql != nil {
@@ -493,8 +400,8 @@ func (sq *StudentQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// StudentGroupBy is the group-by builder for Student entities.
-type StudentGroupBy struct {
+// StaffGroupBy is the group-by builder for Staff entities.
+type StaffGroupBy struct {
 	config
 	fields []string
 	fns    []AggregateFunc
@@ -504,13 +411,13 @@ type StudentGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (sgb *StudentGroupBy) Aggregate(fns ...AggregateFunc) *StudentGroupBy {
+func (sgb *StaffGroupBy) Aggregate(fns ...AggregateFunc) *StaffGroupBy {
 	sgb.fns = append(sgb.fns, fns...)
 	return sgb
 }
 
 // Scan applies the group-by query and scans the result into the given value.
-func (sgb *StudentGroupBy) Scan(ctx context.Context, v interface{}) error {
+func (sgb *StaffGroupBy) Scan(ctx context.Context, v interface{}) error {
 	query, err := sgb.path(ctx)
 	if err != nil {
 		return err
@@ -520,7 +427,7 @@ func (sgb *StudentGroupBy) Scan(ctx context.Context, v interface{}) error {
 }
 
 // ScanX is like Scan, but panics if an error occurs.
-func (sgb *StudentGroupBy) ScanX(ctx context.Context, v interface{}) {
+func (sgb *StaffGroupBy) ScanX(ctx context.Context, v interface{}) {
 	if err := sgb.Scan(ctx, v); err != nil {
 		panic(err)
 	}
@@ -528,9 +435,9 @@ func (sgb *StudentGroupBy) ScanX(ctx context.Context, v interface{}) {
 
 // Strings returns list of strings from group-by.
 // It is only allowed when executing a group-by query with one field.
-func (sgb *StudentGroupBy) Strings(ctx context.Context) ([]string, error) {
+func (sgb *StaffGroupBy) Strings(ctx context.Context) ([]string, error) {
 	if len(sgb.fields) > 1 {
-		return nil, errors.New("ent: StudentGroupBy.Strings is not achievable when grouping more than 1 field")
+		return nil, errors.New("ent: StaffGroupBy.Strings is not achievable when grouping more than 1 field")
 	}
 	var v []string
 	if err := sgb.Scan(ctx, &v); err != nil {
@@ -540,7 +447,7 @@ func (sgb *StudentGroupBy) Strings(ctx context.Context) ([]string, error) {
 }
 
 // StringsX is like Strings, but panics if an error occurs.
-func (sgb *StudentGroupBy) StringsX(ctx context.Context) []string {
+func (sgb *StaffGroupBy) StringsX(ctx context.Context) []string {
 	v, err := sgb.Strings(ctx)
 	if err != nil {
 		panic(err)
@@ -550,7 +457,7 @@ func (sgb *StudentGroupBy) StringsX(ctx context.Context) []string {
 
 // String returns a single string from a group-by query.
 // It is only allowed when executing a group-by query with one field.
-func (sgb *StudentGroupBy) String(ctx context.Context) (_ string, err error) {
+func (sgb *StaffGroupBy) String(ctx context.Context) (_ string, err error) {
 	var v []string
 	if v, err = sgb.Strings(ctx); err != nil {
 		return
@@ -559,15 +466,15 @@ func (sgb *StudentGroupBy) String(ctx context.Context) (_ string, err error) {
 	case 1:
 		return v[0], nil
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = fmt.Errorf("ent: StudentGroupBy.Strings returned %d results when one was expected", len(v))
+		err = fmt.Errorf("ent: StaffGroupBy.Strings returned %d results when one was expected", len(v))
 	}
 	return
 }
 
 // StringX is like String, but panics if an error occurs.
-func (sgb *StudentGroupBy) StringX(ctx context.Context) string {
+func (sgb *StaffGroupBy) StringX(ctx context.Context) string {
 	v, err := sgb.String(ctx)
 	if err != nil {
 		panic(err)
@@ -577,9 +484,9 @@ func (sgb *StudentGroupBy) StringX(ctx context.Context) string {
 
 // Ints returns list of ints from group-by.
 // It is only allowed when executing a group-by query with one field.
-func (sgb *StudentGroupBy) Ints(ctx context.Context) ([]int, error) {
+func (sgb *StaffGroupBy) Ints(ctx context.Context) ([]int, error) {
 	if len(sgb.fields) > 1 {
-		return nil, errors.New("ent: StudentGroupBy.Ints is not achievable when grouping more than 1 field")
+		return nil, errors.New("ent: StaffGroupBy.Ints is not achievable when grouping more than 1 field")
 	}
 	var v []int
 	if err := sgb.Scan(ctx, &v); err != nil {
@@ -589,7 +496,7 @@ func (sgb *StudentGroupBy) Ints(ctx context.Context) ([]int, error) {
 }
 
 // IntsX is like Ints, but panics if an error occurs.
-func (sgb *StudentGroupBy) IntsX(ctx context.Context) []int {
+func (sgb *StaffGroupBy) IntsX(ctx context.Context) []int {
 	v, err := sgb.Ints(ctx)
 	if err != nil {
 		panic(err)
@@ -599,7 +506,7 @@ func (sgb *StudentGroupBy) IntsX(ctx context.Context) []int {
 
 // Int returns a single int from a group-by query.
 // It is only allowed when executing a group-by query with one field.
-func (sgb *StudentGroupBy) Int(ctx context.Context) (_ int, err error) {
+func (sgb *StaffGroupBy) Int(ctx context.Context) (_ int, err error) {
 	var v []int
 	if v, err = sgb.Ints(ctx); err != nil {
 		return
@@ -608,15 +515,15 @@ func (sgb *StudentGroupBy) Int(ctx context.Context) (_ int, err error) {
 	case 1:
 		return v[0], nil
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = fmt.Errorf("ent: StudentGroupBy.Ints returned %d results when one was expected", len(v))
+		err = fmt.Errorf("ent: StaffGroupBy.Ints returned %d results when one was expected", len(v))
 	}
 	return
 }
 
 // IntX is like Int, but panics if an error occurs.
-func (sgb *StudentGroupBy) IntX(ctx context.Context) int {
+func (sgb *StaffGroupBy) IntX(ctx context.Context) int {
 	v, err := sgb.Int(ctx)
 	if err != nil {
 		panic(err)
@@ -626,9 +533,9 @@ func (sgb *StudentGroupBy) IntX(ctx context.Context) int {
 
 // Float64s returns list of float64s from group-by.
 // It is only allowed when executing a group-by query with one field.
-func (sgb *StudentGroupBy) Float64s(ctx context.Context) ([]float64, error) {
+func (sgb *StaffGroupBy) Float64s(ctx context.Context) ([]float64, error) {
 	if len(sgb.fields) > 1 {
-		return nil, errors.New("ent: StudentGroupBy.Float64s is not achievable when grouping more than 1 field")
+		return nil, errors.New("ent: StaffGroupBy.Float64s is not achievable when grouping more than 1 field")
 	}
 	var v []float64
 	if err := sgb.Scan(ctx, &v); err != nil {
@@ -638,7 +545,7 @@ func (sgb *StudentGroupBy) Float64s(ctx context.Context) ([]float64, error) {
 }
 
 // Float64sX is like Float64s, but panics if an error occurs.
-func (sgb *StudentGroupBy) Float64sX(ctx context.Context) []float64 {
+func (sgb *StaffGroupBy) Float64sX(ctx context.Context) []float64 {
 	v, err := sgb.Float64s(ctx)
 	if err != nil {
 		panic(err)
@@ -648,7 +555,7 @@ func (sgb *StudentGroupBy) Float64sX(ctx context.Context) []float64 {
 
 // Float64 returns a single float64 from a group-by query.
 // It is only allowed when executing a group-by query with one field.
-func (sgb *StudentGroupBy) Float64(ctx context.Context) (_ float64, err error) {
+func (sgb *StaffGroupBy) Float64(ctx context.Context) (_ float64, err error) {
 	var v []float64
 	if v, err = sgb.Float64s(ctx); err != nil {
 		return
@@ -657,15 +564,15 @@ func (sgb *StudentGroupBy) Float64(ctx context.Context) (_ float64, err error) {
 	case 1:
 		return v[0], nil
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = fmt.Errorf("ent: StudentGroupBy.Float64s returned %d results when one was expected", len(v))
+		err = fmt.Errorf("ent: StaffGroupBy.Float64s returned %d results when one was expected", len(v))
 	}
 	return
 }
 
 // Float64X is like Float64, but panics if an error occurs.
-func (sgb *StudentGroupBy) Float64X(ctx context.Context) float64 {
+func (sgb *StaffGroupBy) Float64X(ctx context.Context) float64 {
 	v, err := sgb.Float64(ctx)
 	if err != nil {
 		panic(err)
@@ -675,9 +582,9 @@ func (sgb *StudentGroupBy) Float64X(ctx context.Context) float64 {
 
 // Bools returns list of bools from group-by.
 // It is only allowed when executing a group-by query with one field.
-func (sgb *StudentGroupBy) Bools(ctx context.Context) ([]bool, error) {
+func (sgb *StaffGroupBy) Bools(ctx context.Context) ([]bool, error) {
 	if len(sgb.fields) > 1 {
-		return nil, errors.New("ent: StudentGroupBy.Bools is not achievable when grouping more than 1 field")
+		return nil, errors.New("ent: StaffGroupBy.Bools is not achievable when grouping more than 1 field")
 	}
 	var v []bool
 	if err := sgb.Scan(ctx, &v); err != nil {
@@ -687,7 +594,7 @@ func (sgb *StudentGroupBy) Bools(ctx context.Context) ([]bool, error) {
 }
 
 // BoolsX is like Bools, but panics if an error occurs.
-func (sgb *StudentGroupBy) BoolsX(ctx context.Context) []bool {
+func (sgb *StaffGroupBy) BoolsX(ctx context.Context) []bool {
 	v, err := sgb.Bools(ctx)
 	if err != nil {
 		panic(err)
@@ -697,7 +604,7 @@ func (sgb *StudentGroupBy) BoolsX(ctx context.Context) []bool {
 
 // Bool returns a single bool from a group-by query.
 // It is only allowed when executing a group-by query with one field.
-func (sgb *StudentGroupBy) Bool(ctx context.Context) (_ bool, err error) {
+func (sgb *StaffGroupBy) Bool(ctx context.Context) (_ bool, err error) {
 	var v []bool
 	if v, err = sgb.Bools(ctx); err != nil {
 		return
@@ -706,15 +613,15 @@ func (sgb *StudentGroupBy) Bool(ctx context.Context) (_ bool, err error) {
 	case 1:
 		return v[0], nil
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = fmt.Errorf("ent: StudentGroupBy.Bools returned %d results when one was expected", len(v))
+		err = fmt.Errorf("ent: StaffGroupBy.Bools returned %d results when one was expected", len(v))
 	}
 	return
 }
 
 // BoolX is like Bool, but panics if an error occurs.
-func (sgb *StudentGroupBy) BoolX(ctx context.Context) bool {
+func (sgb *StaffGroupBy) BoolX(ctx context.Context) bool {
 	v, err := sgb.Bool(ctx)
 	if err != nil {
 		panic(err)
@@ -722,9 +629,9 @@ func (sgb *StudentGroupBy) BoolX(ctx context.Context) bool {
 	return v
 }
 
-func (sgb *StudentGroupBy) sqlScan(ctx context.Context, v interface{}) error {
+func (sgb *StaffGroupBy) sqlScan(ctx context.Context, v interface{}) error {
 	for _, f := range sgb.fields {
-		if !student.ValidColumn(f) {
+		if !staff.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("invalid field %q for group-by", f)}
 		}
 	}
@@ -741,7 +648,7 @@ func (sgb *StudentGroupBy) sqlScan(ctx context.Context, v interface{}) error {
 	return sql.ScanSlice(rows, v)
 }
 
-func (sgb *StudentGroupBy) sqlQuery() *sql.Selector {
+func (sgb *StaffGroupBy) sqlQuery() *sql.Selector {
 	selector := sgb.sql.Select()
 	aggregation := make([]string, 0, len(sgb.fns))
 	for _, fn := range sgb.fns {
@@ -762,33 +669,33 @@ func (sgb *StudentGroupBy) sqlQuery() *sql.Selector {
 	return selector.GroupBy(selector.Columns(sgb.fields...)...)
 }
 
-// StudentSelect is the builder for selecting fields of Student entities.
-type StudentSelect struct {
-	*StudentQuery
+// StaffSelect is the builder for selecting fields of Staff entities.
+type StaffSelect struct {
+	*StaffQuery
 	// intermediate query (i.e. traversal path).
 	sql *sql.Selector
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ss *StudentSelect) Scan(ctx context.Context, v interface{}) error {
+func (ss *StaffSelect) Scan(ctx context.Context, v interface{}) error {
 	if err := ss.prepareQuery(ctx); err != nil {
 		return err
 	}
-	ss.sql = ss.StudentQuery.sqlQuery(ctx)
+	ss.sql = ss.StaffQuery.sqlQuery(ctx)
 	return ss.sqlScan(ctx, v)
 }
 
 // ScanX is like Scan, but panics if an error occurs.
-func (ss *StudentSelect) ScanX(ctx context.Context, v interface{}) {
+func (ss *StaffSelect) ScanX(ctx context.Context, v interface{}) {
 	if err := ss.Scan(ctx, v); err != nil {
 		panic(err)
 	}
 }
 
 // Strings returns list of strings from a selector. It is only allowed when selecting one field.
-func (ss *StudentSelect) Strings(ctx context.Context) ([]string, error) {
+func (ss *StaffSelect) Strings(ctx context.Context) ([]string, error) {
 	if len(ss.fields) > 1 {
-		return nil, errors.New("ent: StudentSelect.Strings is not achievable when selecting more than 1 field")
+		return nil, errors.New("ent: StaffSelect.Strings is not achievable when selecting more than 1 field")
 	}
 	var v []string
 	if err := ss.Scan(ctx, &v); err != nil {
@@ -798,7 +705,7 @@ func (ss *StudentSelect) Strings(ctx context.Context) ([]string, error) {
 }
 
 // StringsX is like Strings, but panics if an error occurs.
-func (ss *StudentSelect) StringsX(ctx context.Context) []string {
+func (ss *StaffSelect) StringsX(ctx context.Context) []string {
 	v, err := ss.Strings(ctx)
 	if err != nil {
 		panic(err)
@@ -807,7 +714,7 @@ func (ss *StudentSelect) StringsX(ctx context.Context) []string {
 }
 
 // String returns a single string from a selector. It is only allowed when selecting one field.
-func (ss *StudentSelect) String(ctx context.Context) (_ string, err error) {
+func (ss *StaffSelect) String(ctx context.Context) (_ string, err error) {
 	var v []string
 	if v, err = ss.Strings(ctx); err != nil {
 		return
@@ -816,15 +723,15 @@ func (ss *StudentSelect) String(ctx context.Context) (_ string, err error) {
 	case 1:
 		return v[0], nil
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = fmt.Errorf("ent: StudentSelect.Strings returned %d results when one was expected", len(v))
+		err = fmt.Errorf("ent: StaffSelect.Strings returned %d results when one was expected", len(v))
 	}
 	return
 }
 
 // StringX is like String, but panics if an error occurs.
-func (ss *StudentSelect) StringX(ctx context.Context) string {
+func (ss *StaffSelect) StringX(ctx context.Context) string {
 	v, err := ss.String(ctx)
 	if err != nil {
 		panic(err)
@@ -833,9 +740,9 @@ func (ss *StudentSelect) StringX(ctx context.Context) string {
 }
 
 // Ints returns list of ints from a selector. It is only allowed when selecting one field.
-func (ss *StudentSelect) Ints(ctx context.Context) ([]int, error) {
+func (ss *StaffSelect) Ints(ctx context.Context) ([]int, error) {
 	if len(ss.fields) > 1 {
-		return nil, errors.New("ent: StudentSelect.Ints is not achievable when selecting more than 1 field")
+		return nil, errors.New("ent: StaffSelect.Ints is not achievable when selecting more than 1 field")
 	}
 	var v []int
 	if err := ss.Scan(ctx, &v); err != nil {
@@ -845,7 +752,7 @@ func (ss *StudentSelect) Ints(ctx context.Context) ([]int, error) {
 }
 
 // IntsX is like Ints, but panics if an error occurs.
-func (ss *StudentSelect) IntsX(ctx context.Context) []int {
+func (ss *StaffSelect) IntsX(ctx context.Context) []int {
 	v, err := ss.Ints(ctx)
 	if err != nil {
 		panic(err)
@@ -854,7 +761,7 @@ func (ss *StudentSelect) IntsX(ctx context.Context) []int {
 }
 
 // Int returns a single int from a selector. It is only allowed when selecting one field.
-func (ss *StudentSelect) Int(ctx context.Context) (_ int, err error) {
+func (ss *StaffSelect) Int(ctx context.Context) (_ int, err error) {
 	var v []int
 	if v, err = ss.Ints(ctx); err != nil {
 		return
@@ -863,15 +770,15 @@ func (ss *StudentSelect) Int(ctx context.Context) (_ int, err error) {
 	case 1:
 		return v[0], nil
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = fmt.Errorf("ent: StudentSelect.Ints returned %d results when one was expected", len(v))
+		err = fmt.Errorf("ent: StaffSelect.Ints returned %d results when one was expected", len(v))
 	}
 	return
 }
 
 // IntX is like Int, but panics if an error occurs.
-func (ss *StudentSelect) IntX(ctx context.Context) int {
+func (ss *StaffSelect) IntX(ctx context.Context) int {
 	v, err := ss.Int(ctx)
 	if err != nil {
 		panic(err)
@@ -880,9 +787,9 @@ func (ss *StudentSelect) IntX(ctx context.Context) int {
 }
 
 // Float64s returns list of float64s from a selector. It is only allowed when selecting one field.
-func (ss *StudentSelect) Float64s(ctx context.Context) ([]float64, error) {
+func (ss *StaffSelect) Float64s(ctx context.Context) ([]float64, error) {
 	if len(ss.fields) > 1 {
-		return nil, errors.New("ent: StudentSelect.Float64s is not achievable when selecting more than 1 field")
+		return nil, errors.New("ent: StaffSelect.Float64s is not achievable when selecting more than 1 field")
 	}
 	var v []float64
 	if err := ss.Scan(ctx, &v); err != nil {
@@ -892,7 +799,7 @@ func (ss *StudentSelect) Float64s(ctx context.Context) ([]float64, error) {
 }
 
 // Float64sX is like Float64s, but panics if an error occurs.
-func (ss *StudentSelect) Float64sX(ctx context.Context) []float64 {
+func (ss *StaffSelect) Float64sX(ctx context.Context) []float64 {
 	v, err := ss.Float64s(ctx)
 	if err != nil {
 		panic(err)
@@ -901,7 +808,7 @@ func (ss *StudentSelect) Float64sX(ctx context.Context) []float64 {
 }
 
 // Float64 returns a single float64 from a selector. It is only allowed when selecting one field.
-func (ss *StudentSelect) Float64(ctx context.Context) (_ float64, err error) {
+func (ss *StaffSelect) Float64(ctx context.Context) (_ float64, err error) {
 	var v []float64
 	if v, err = ss.Float64s(ctx); err != nil {
 		return
@@ -910,15 +817,15 @@ func (ss *StudentSelect) Float64(ctx context.Context) (_ float64, err error) {
 	case 1:
 		return v[0], nil
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = fmt.Errorf("ent: StudentSelect.Float64s returned %d results when one was expected", len(v))
+		err = fmt.Errorf("ent: StaffSelect.Float64s returned %d results when one was expected", len(v))
 	}
 	return
 }
 
 // Float64X is like Float64, but panics if an error occurs.
-func (ss *StudentSelect) Float64X(ctx context.Context) float64 {
+func (ss *StaffSelect) Float64X(ctx context.Context) float64 {
 	v, err := ss.Float64(ctx)
 	if err != nil {
 		panic(err)
@@ -927,9 +834,9 @@ func (ss *StudentSelect) Float64X(ctx context.Context) float64 {
 }
 
 // Bools returns list of bools from a selector. It is only allowed when selecting one field.
-func (ss *StudentSelect) Bools(ctx context.Context) ([]bool, error) {
+func (ss *StaffSelect) Bools(ctx context.Context) ([]bool, error) {
 	if len(ss.fields) > 1 {
-		return nil, errors.New("ent: StudentSelect.Bools is not achievable when selecting more than 1 field")
+		return nil, errors.New("ent: StaffSelect.Bools is not achievable when selecting more than 1 field")
 	}
 	var v []bool
 	if err := ss.Scan(ctx, &v); err != nil {
@@ -939,7 +846,7 @@ func (ss *StudentSelect) Bools(ctx context.Context) ([]bool, error) {
 }
 
 // BoolsX is like Bools, but panics if an error occurs.
-func (ss *StudentSelect) BoolsX(ctx context.Context) []bool {
+func (ss *StaffSelect) BoolsX(ctx context.Context) []bool {
 	v, err := ss.Bools(ctx)
 	if err != nil {
 		panic(err)
@@ -948,7 +855,7 @@ func (ss *StudentSelect) BoolsX(ctx context.Context) []bool {
 }
 
 // Bool returns a single bool from a selector. It is only allowed when selecting one field.
-func (ss *StudentSelect) Bool(ctx context.Context) (_ bool, err error) {
+func (ss *StaffSelect) Bool(ctx context.Context) (_ bool, err error) {
 	var v []bool
 	if v, err = ss.Bools(ctx); err != nil {
 		return
@@ -957,15 +864,15 @@ func (ss *StudentSelect) Bool(ctx context.Context) (_ bool, err error) {
 	case 1:
 		return v[0], nil
 	case 0:
-		err = &NotFoundError{student.Label}
+		err = &NotFoundError{staff.Label}
 	default:
-		err = fmt.Errorf("ent: StudentSelect.Bools returned %d results when one was expected", len(v))
+		err = fmt.Errorf("ent: StaffSelect.Bools returned %d results when one was expected", len(v))
 	}
 	return
 }
 
 // BoolX is like Bool, but panics if an error occurs.
-func (ss *StudentSelect) BoolX(ctx context.Context) bool {
+func (ss *StaffSelect) BoolX(ctx context.Context) bool {
 	v, err := ss.Bool(ctx)
 	if err != nil {
 		panic(err)
@@ -973,7 +880,7 @@ func (ss *StudentSelect) BoolX(ctx context.Context) bool {
 	return v
 }
 
-func (ss *StudentSelect) sqlScan(ctx context.Context, v interface{}) error {
+func (ss *StaffSelect) sqlScan(ctx context.Context, v interface{}) error {
 	rows := &sql.Rows{}
 	query, args := ss.sql.Query()
 	if err := ss.driver.Query(ctx, query, args, rows); err != nil {

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"college/ent/department"
 	"college/ent/schema"
 	"college/ent/student"
 	"time"
@@ -14,6 +15,24 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	departmentFields := schema.Department{}.Fields()
+	_ = departmentFields
+	// departmentDescName is the schema descriptor for name field.
+	departmentDescName := departmentFields[1].Descriptor()
+	// department.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	department.NameValidator = departmentDescName.Validators[0].(func(string) error)
+	// departmentDescCode is the schema descriptor for code field.
+	departmentDescCode := departmentFields[2].Descriptor()
+	// department.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	department.CodeValidator = departmentDescCode.Validators[0].(func(string) error)
+	// departmentDescTelephone is the schema descriptor for telephone field.
+	departmentDescTelephone := departmentFields[3].Descriptor()
+	// department.TelephoneValidator is a validator for the "telephone" field. It is called by the builders before save.
+	department.TelephoneValidator = departmentDescTelephone.Validators[0].(func(string) error)
+	// departmentDescID is the schema descriptor for id field.
+	departmentDescID := departmentFields[0].Descriptor()
+	// department.DefaultID holds the default value on creation for the id field.
+	department.DefaultID = departmentDescID.Default.(func() uuid.UUID)
 	studentFields := schema.Student{}.Fields()
 	_ = studentFields
 	// studentDescFirstname is the schema descriptor for firstname field.

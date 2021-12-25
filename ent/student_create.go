@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"college/ent/department"
 	"college/ent/student"
 	"context"
 	"errors"
@@ -79,10 +80,21 @@ func (sc *StudentCreate) SetNillableUpdatedAt(t *time.Time) *StudentCreate {
 	return sc
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (sc *StudentCreate) SetDepartmentID(u uuid.UUID) *StudentCreate {
+	sc.mutation.SetDepartmentID(u)
+	return sc
+}
+
 // SetID sets the "id" field.
 func (sc *StudentCreate) SetID(u uuid.UUID) *StudentCreate {
 	sc.mutation.SetID(u)
 	return sc
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (sc *StudentCreate) SetDepartment(d *Department) *StudentCreate {
+	return sc.SetDepartmentID(d.ID)
 }
 
 // Mutation returns the StudentMutation object of the builder.
@@ -300,6 +312,26 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 			Column: student.FieldUpdatedAt,
 		})
 		_node.UpdatedAt = value
+	}
+	if nodes := sc.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   student.DepartmentTable,
+			Columns: []string{student.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.DepartmentID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

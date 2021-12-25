@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"college/ent/department"
 	"college/ent/predicate"
 	"college/ent/student"
 	"context"
@@ -12,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // StudentUpdate is the builder for updating Student entities.
@@ -84,9 +86,32 @@ func (su *StudentUpdate) SetUpdatedAt(t time.Time) *StudentUpdate {
 	return su
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (su *StudentUpdate) SetDepartmentID(u uuid.UUID) *StudentUpdate {
+	su.mutation.SetDepartmentID(u)
+	return su
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (su *StudentUpdate) ClearDepartmentID() *StudentUpdate {
+	su.mutation.ClearDepartmentID()
+	return su
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (su *StudentUpdate) SetDepartment(d *Department) *StudentUpdate {
+	return su.SetDepartmentID(d.ID)
+}
+
 // Mutation returns the StudentMutation object of the builder.
 func (su *StudentUpdate) Mutation() *StudentMutation {
 	return su.mutation
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (su *StudentUpdate) ClearDepartment() *StudentUpdate {
+	su.mutation.ClearDepartment()
+	return su
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -257,6 +282,41 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: student.FieldUpdatedAt,
 		})
 	}
+	if su.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   student.DepartmentTable,
+			Columns: []string{student.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   student.DepartmentTable,
+			Columns: []string{student.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{student.Label}
@@ -333,9 +393,32 @@ func (suo *StudentUpdateOne) SetUpdatedAt(t time.Time) *StudentUpdateOne {
 	return suo
 }
 
+// SetDepartmentID sets the "department_id" field.
+func (suo *StudentUpdateOne) SetDepartmentID(u uuid.UUID) *StudentUpdateOne {
+	suo.mutation.SetDepartmentID(u)
+	return suo
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (suo *StudentUpdateOne) ClearDepartmentID() *StudentUpdateOne {
+	suo.mutation.ClearDepartmentID()
+	return suo
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (suo *StudentUpdateOne) SetDepartment(d *Department) *StudentUpdateOne {
+	return suo.SetDepartmentID(d.ID)
+}
+
 // Mutation returns the StudentMutation object of the builder.
 func (suo *StudentUpdateOne) Mutation() *StudentMutation {
 	return suo.mutation
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (suo *StudentUpdateOne) ClearDepartment() *StudentUpdateOne {
+	suo.mutation.ClearDepartment()
+	return suo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -529,6 +612,41 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 			Value:  value,
 			Column: student.FieldUpdatedAt,
 		})
+	}
+	if suo.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   student.DepartmentTable,
+			Columns: []string{student.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   student.DepartmentTable,
+			Columns: []string{student.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Student{config: suo.config}
 	_spec.Assign = _node.assignValues

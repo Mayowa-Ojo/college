@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"college/ent/department"
 	"college/ent/student"
 	"fmt"
 	"strings"
@@ -31,6 +32,34 @@ type Student struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// DepartmentID holds the value of the "department_id" field.
+	DepartmentID uuid.UUID `json:"department_id,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the StudentQuery when eager-loading is set.
+	Edges StudentEdges `json:"edges"`
+}
+
+// StudentEdges holds the relations/edges for other nodes in the graph.
+type StudentEdges struct {
+	// Department holds the value of the department edge.
+	Department *Department `json:"department,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// DepartmentOrErr returns the Department value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e StudentEdges) DepartmentOrErr() (*Department, error) {
+	if e.loadedTypes[0] {
+		if e.Department == nil {
+			// The edge department was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: department.Label}
+		}
+		return e.Department, nil
+	}
+	return nil, &NotLoadedError{edge: "department"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -44,7 +73,7 @@ func (*Student) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case student.FieldCreatedAt, student.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case student.FieldID:
+		case student.FieldID, student.FieldDepartmentID:
 			values[i] = new(uuid.UUID)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Student", columns[i])
@@ -109,9 +138,20 @@ func (s *Student) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				s.UpdatedAt = value.Time
 			}
+		case student.FieldDepartmentID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field department_id", values[i])
+			} else if value != nil {
+				s.DepartmentID = *value
+			}
 		}
 	}
 	return nil
+}
+
+// QueryDepartment queries the "department" edge of the Student entity.
+func (s *Student) QueryDepartment() *DepartmentQuery {
+	return (&StudentClient{config: s.config}).QueryDepartment(s)
 }
 
 // Update returns a builder for updating this Student.
@@ -151,6 +191,8 @@ func (s *Student) String() string {
 	builder.WriteString(s.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", updated_at=")
 	builder.WriteString(s.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", department_id=")
+	builder.WriteString(fmt.Sprintf("%v", s.DepartmentID))
 	builder.WriteByte(')')
 	return builder.String()
 }

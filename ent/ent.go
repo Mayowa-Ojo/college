@@ -3,6 +3,9 @@
 package ent
 
 import (
+	"college/ent/class"
+	"college/ent/department"
+	"college/ent/staff"
 	"college/ent/student"
 	"errors"
 	"fmt"
@@ -29,7 +32,10 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		student.Table: student.ValidColumn,
+		class.Table:      class.ValidColumn,
+		department.Table: department.ValidColumn,
+		staff.Table:      staff.ValidColumn,
+		student.Table:    student.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

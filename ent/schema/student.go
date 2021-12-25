@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 )
@@ -25,10 +26,16 @@ func (Student) Fields() []ent.Field {
 		field.Int("year").Min(1).NonNegative(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
+		field.UUID("department_id", uuid.UUID{}).Unique().Optional(),
 	}
 }
 
 // Edges of the Student.
 func (Student) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("department", Department.Type).
+			Ref("students").
+			Field("department_id").
+			Unique(),
+	}
 }
