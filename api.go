@@ -1,8 +1,8 @@
-package main
+package college
 
 import (
+	"college/ent"
 	"context"
-	"ent-demo/ent"
 	"log"
 	"net/http"
 	"os"
@@ -21,7 +21,7 @@ func Run(client *ent.Client) *gin.Engine {
 
 	router.Use(Logger(logrus.New()), gin.Recovery())
 
-	registerRoutes(router)
+	registerRoutes(router, client)
 
 	return router
 }
