@@ -31,6 +31,9 @@ func registerRoutes(router *gin.Engine, client *ent.Client) {
 
 		v1.GET("/students", facade.GetStudents)
 		v1.POST("/students", facade.CreateStudent)
+		v1.PATCH("/students/:id/details", facade.UpdateStudentDetails)
+		v1.PATCH("/students/:id/department", facade.UpdateStudentDepartment)
+		v1.DELETE("/students/:id", facade.DeleteStudent)
 
 		v1.POST("/departments", facade.CreateDepartment)
 	}
