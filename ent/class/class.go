@@ -2,19 +2,61 @@
 
 package class
 
+import (
+	"college/ent/schema"
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+)
+
 const (
 	// Label holds the string label denoting the class type in the database.
 	Label = "class"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldTitle holds the string denoting the title field in the database.
+	FieldTitle = "title"
+	// FieldCode holds the string denoting the code field in the database.
+	FieldCode = "code"
+	// FieldUnit holds the string denoting the unit field in the database.
+	FieldUnit = "unit"
+	// FieldSemester holds the string denoting the semester field in the database.
+	FieldSemester = "semester"
+	// FieldLocation holds the string denoting the location field in the database.
+	FieldLocation = "location"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
+	// EdgeStudent holds the string denoting the student edge name in mutations.
+	EdgeStudent = "student"
 	// Table holds the table name of the class in the database.
 	Table = "classes"
+	// StudentTable is the table that holds the student relation/edge. The primary key declared below.
+	StudentTable = "class_student"
+	// StudentInverseTable is the table name for the Student entity.
+	// It exists in this package in order to avoid circular dependency with the "student" package.
+	StudentInverseTable = "students"
 )
 
 // Columns holds all SQL columns for class fields.
 var Columns = []string{
 	FieldID,
+	FieldTitle,
+	FieldCode,
+	FieldUnit,
+	FieldSemester,
+	FieldLocation,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 }
+
+var (
+	// StudentPrimaryKey and StudentColumn2 are the table columns denoting the
+	// primary key for the student relation (M2M).
+	StudentPrimaryKey = []string{"class_id", "student_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -24,4 +66,33 @@ func ValidColumn(column string) bool {
 		}
 	}
 	return false
+}
+
+var (
+	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	TitleValidator func(string) error
+	// CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	CodeValidator func(string) error
+	// UnitValidator is a validator for the "unit" field. It is called by the builders before save.
+	UnitValidator func(int) error
+	// LocationValidator is a validator for the "location" field. It is called by the builders before save.
+	LocationValidator func(string) error
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
+)
+
+// SemesterValidator is a validator for the "semester" field enum values. It is called by the builders before save.
+func SemesterValidator(s schema.Semester) error {
+	switch s {
+	case "FIRST", "SECOND":
+		return nil
+	default:
+		return fmt.Errorf("class: invalid enum value for semester field: %q", s)
+	}
 }

@@ -122,6 +122,13 @@ func AdmissionNumber(v string) predicate.Student {
 	})
 }
 
+// Cgpa applies equality check predicate on the "cgpa" field. It's identical to CgpaEQ.
+func Cgpa(v float32) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCgpa), v))
+	})
+}
+
 // Year applies equality check predicate on the "year" field. It's identical to YearEQ.
 func Year(v int) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
@@ -594,6 +601,82 @@ func AdmissionNumberContainsFold(v string) predicate.Student {
 	})
 }
 
+// CgpaEQ applies the EQ predicate on the "cgpa" field.
+func CgpaEQ(v float32) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCgpa), v))
+	})
+}
+
+// CgpaNEQ applies the NEQ predicate on the "cgpa" field.
+func CgpaNEQ(v float32) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCgpa), v))
+	})
+}
+
+// CgpaIn applies the In predicate on the "cgpa" field.
+func CgpaIn(vs ...float32) predicate.Student {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Student(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCgpa), v...))
+	})
+}
+
+// CgpaNotIn applies the NotIn predicate on the "cgpa" field.
+func CgpaNotIn(vs ...float32) predicate.Student {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Student(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCgpa), v...))
+	})
+}
+
+// CgpaGT applies the GT predicate on the "cgpa" field.
+func CgpaGT(v float32) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCgpa), v))
+	})
+}
+
+// CgpaGTE applies the GTE predicate on the "cgpa" field.
+func CgpaGTE(v float32) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCgpa), v))
+	})
+}
+
+// CgpaLT applies the LT predicate on the "cgpa" field.
+func CgpaLT(v float32) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCgpa), v))
+	})
+}
+
+// CgpaLTE applies the LTE predicate on the "cgpa" field.
+func CgpaLTE(v float32) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCgpa), v))
+	})
+}
+
 // YearEQ applies the EQ predicate on the "year" field.
 func YearEQ(v int) predicate.Student {
 	return predicate.Student(func(s *sql.Selector) {
@@ -903,6 +986,34 @@ func HasDepartmentWith(preds ...predicate.Department) predicate.Student {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(DepartmentInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasClasses applies the HasEdge predicate on the "classes" edge.
+func HasClasses() predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ClassesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ClassesTable, ClassesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasClassesWith applies the HasEdge predicate on the "classes" edge with a given conditions (other predicates).
+func HasClassesWith(preds ...predicate.Class) predicate.Student {
+	return predicate.Student(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ClassesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ClassesTable, ClassesPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

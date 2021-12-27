@@ -23,6 +23,7 @@ func (Student) Fields() []ent.Field {
 		field.String("lastname").MaxLen(250),
 		field.String("email").Match(regexp.MustCompile(`[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+`)).Unique(),
 		field.String("admission_number"),
+		field.Float32("cgpa").Default(0.0),
 		field.Int("year").Min(1).NonNegative(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
@@ -37,5 +38,7 @@ func (Student) Edges() []ent.Edge {
 			Ref("students").
 			Field("department_id").
 			Unique(),
+		edge.From("classes", Class.Type).
+			Ref("student"),
 	}
 }

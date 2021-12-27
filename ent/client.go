@@ -184,7 +184,7 @@ func (c *ClassClient) UpdateOne(cl *Class) *ClassUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ClassClient) UpdateOneID(id int) *ClassUpdateOne {
+func (c *ClassClient) UpdateOneID(id uuid.UUID) *ClassUpdateOne {
 	mutation := newClassMutation(c.config, OpUpdateOne, withClassID(id))
 	return &ClassUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -201,7 +201,7 @@ func (c *ClassClient) DeleteOne(cl *Class) *ClassDeleteOne {
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *ClassClient) DeleteOneID(id int) *ClassDeleteOne {
+func (c *ClassClient) DeleteOneID(id uuid.UUID) *ClassDeleteOne {
 	builder := c.Delete().Where(class.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -216,17 +216,33 @@ func (c *ClassClient) Query() *ClassQuery {
 }
 
 // Get returns a Class entity by its id.
-func (c *ClassClient) Get(ctx context.Context, id int) (*Class, error) {
+func (c *ClassClient) Get(ctx context.Context, id uuid.UUID) (*Class, error) {
 	return c.Query().Where(class.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ClassClient) GetX(ctx context.Context, id int) *Class {
+func (c *ClassClient) GetX(ctx context.Context, id uuid.UUID) *Class {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryStudent queries the student edge of a Class.
+func (c *ClassClient) QueryStudent(cl *Class) *StudentQuery {
+	query := &StudentQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := cl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(class.Table, class.FieldID, id),
+			sqlgraph.To(student.Table, student.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, class.StudentTable, class.StudentPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(cl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -524,6 +540,22 @@ func (c *StudentClient) QueryDepartment(s *Student) *DepartmentQuery {
 			sqlgraph.From(student.Table, student.FieldID, id),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, student.DepartmentTable, student.DepartmentColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryClasses queries the classes edge of a Student.
+func (c *StudentClient) QueryClasses(s *Student) *ClassQuery {
+	query := &ClassQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(student.Table, student.FieldID, id),
+			sqlgraph.To(class.Table, class.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, student.ClassesTable, student.ClassesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil

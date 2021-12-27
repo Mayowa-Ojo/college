@@ -21,6 +21,8 @@ const (
 	FieldEmail = "email"
 	// FieldAdmissionNumber holds the string denoting the admission_number field in the database.
 	FieldAdmissionNumber = "admission_number"
+	// FieldCgpa holds the string denoting the cgpa field in the database.
+	FieldCgpa = "cgpa"
 	// FieldYear holds the string denoting the year field in the database.
 	FieldYear = "year"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -31,6 +33,8 @@ const (
 	FieldDepartmentID = "department_id"
 	// EdgeDepartment holds the string denoting the department edge name in mutations.
 	EdgeDepartment = "department"
+	// EdgeClasses holds the string denoting the classes edge name in mutations.
+	EdgeClasses = "classes"
 	// Table holds the table name of the student in the database.
 	Table = "students"
 	// DepartmentTable is the table that holds the department relation/edge.
@@ -40,6 +44,11 @@ const (
 	DepartmentInverseTable = "departments"
 	// DepartmentColumn is the table column denoting the department relation/edge.
 	DepartmentColumn = "department_id"
+	// ClassesTable is the table that holds the classes relation/edge. The primary key declared below.
+	ClassesTable = "class_student"
+	// ClassesInverseTable is the table name for the Class entity.
+	// It exists in this package in order to avoid circular dependency with the "class" package.
+	ClassesInverseTable = "classes"
 )
 
 // Columns holds all SQL columns for student fields.
@@ -49,11 +58,18 @@ var Columns = []string{
 	FieldLastname,
 	FieldEmail,
 	FieldAdmissionNumber,
+	FieldCgpa,
 	FieldYear,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDepartmentID,
 }
+
+var (
+	// ClassesPrimaryKey and ClassesColumn2 are the table columns denoting the
+	// primary key for the classes relation (M2M).
+	ClassesPrimaryKey = []string{"class_id", "student_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -72,6 +88,8 @@ var (
 	LastnameValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
+	// DefaultCgpa holds the default value on creation for the "cgpa" field.
+	DefaultCgpa float32
 	// YearValidator is a validator for the "year" field. It is called by the builders before save.
 	YearValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.

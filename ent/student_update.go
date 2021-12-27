@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"college/ent/class"
 	"college/ent/department"
 	"college/ent/predicate"
 	"college/ent/student"
@@ -50,6 +51,27 @@ func (su *StudentUpdate) SetEmail(s string) *StudentUpdate {
 // SetAdmissionNumber sets the "admission_number" field.
 func (su *StudentUpdate) SetAdmissionNumber(s string) *StudentUpdate {
 	su.mutation.SetAdmissionNumber(s)
+	return su
+}
+
+// SetCgpa sets the "cgpa" field.
+func (su *StudentUpdate) SetCgpa(f float32) *StudentUpdate {
+	su.mutation.ResetCgpa()
+	su.mutation.SetCgpa(f)
+	return su
+}
+
+// SetNillableCgpa sets the "cgpa" field if the given value is not nil.
+func (su *StudentUpdate) SetNillableCgpa(f *float32) *StudentUpdate {
+	if f != nil {
+		su.SetCgpa(*f)
+	}
+	return su
+}
+
+// AddCgpa adds f to the "cgpa" field.
+func (su *StudentUpdate) AddCgpa(f float32) *StudentUpdate {
+	su.mutation.AddCgpa(f)
 	return su
 }
 
@@ -103,6 +125,21 @@ func (su *StudentUpdate) SetDepartment(d *Department) *StudentUpdate {
 	return su.SetDepartmentID(d.ID)
 }
 
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (su *StudentUpdate) AddClassIDs(ids ...uuid.UUID) *StudentUpdate {
+	su.mutation.AddClassIDs(ids...)
+	return su
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (su *StudentUpdate) AddClasses(c ...*Class) *StudentUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return su.AddClassIDs(ids...)
+}
+
 // Mutation returns the StudentMutation object of the builder.
 func (su *StudentUpdate) Mutation() *StudentMutation {
 	return su.mutation
@@ -112,6 +149,27 @@ func (su *StudentUpdate) Mutation() *StudentMutation {
 func (su *StudentUpdate) ClearDepartment() *StudentUpdate {
 	su.mutation.ClearDepartment()
 	return su
+}
+
+// ClearClasses clears all "classes" edges to the Class entity.
+func (su *StudentUpdate) ClearClasses() *StudentUpdate {
+	su.mutation.ClearClasses()
+	return su
+}
+
+// RemoveClassIDs removes the "classes" edge to Class entities by IDs.
+func (su *StudentUpdate) RemoveClassIDs(ids ...uuid.UUID) *StudentUpdate {
+	su.mutation.RemoveClassIDs(ids...)
+	return su
+}
+
+// RemoveClasses removes "classes" edges to Class entities.
+func (su *StudentUpdate) RemoveClasses(c ...*Class) *StudentUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return su.RemoveClassIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -254,6 +312,20 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: student.FieldAdmissionNumber,
 		})
 	}
+	if value, ok := su.mutation.Cgpa(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat32,
+			Value:  value,
+			Column: student.FieldCgpa,
+		})
+	}
+	if value, ok := su.mutation.AddedCgpa(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat32,
+			Value:  value,
+			Column: student.FieldCgpa,
+		})
+	}
 	if value, ok := su.mutation.Year(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
@@ -317,6 +389,60 @@ func (su *StudentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if su.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.ClassesTable,
+			Columns: student.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedClassesIDs(); len(nodes) > 0 && !su.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.ClassesTable,
+			Columns: student.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.ClassesTable,
+			Columns: student.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{student.Label}
@@ -357,6 +483,27 @@ func (suo *StudentUpdateOne) SetEmail(s string) *StudentUpdateOne {
 // SetAdmissionNumber sets the "admission_number" field.
 func (suo *StudentUpdateOne) SetAdmissionNumber(s string) *StudentUpdateOne {
 	suo.mutation.SetAdmissionNumber(s)
+	return suo
+}
+
+// SetCgpa sets the "cgpa" field.
+func (suo *StudentUpdateOne) SetCgpa(f float32) *StudentUpdateOne {
+	suo.mutation.ResetCgpa()
+	suo.mutation.SetCgpa(f)
+	return suo
+}
+
+// SetNillableCgpa sets the "cgpa" field if the given value is not nil.
+func (suo *StudentUpdateOne) SetNillableCgpa(f *float32) *StudentUpdateOne {
+	if f != nil {
+		suo.SetCgpa(*f)
+	}
+	return suo
+}
+
+// AddCgpa adds f to the "cgpa" field.
+func (suo *StudentUpdateOne) AddCgpa(f float32) *StudentUpdateOne {
+	suo.mutation.AddCgpa(f)
 	return suo
 }
 
@@ -410,6 +557,21 @@ func (suo *StudentUpdateOne) SetDepartment(d *Department) *StudentUpdateOne {
 	return suo.SetDepartmentID(d.ID)
 }
 
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (suo *StudentUpdateOne) AddClassIDs(ids ...uuid.UUID) *StudentUpdateOne {
+	suo.mutation.AddClassIDs(ids...)
+	return suo
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (suo *StudentUpdateOne) AddClasses(c ...*Class) *StudentUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return suo.AddClassIDs(ids...)
+}
+
 // Mutation returns the StudentMutation object of the builder.
 func (suo *StudentUpdateOne) Mutation() *StudentMutation {
 	return suo.mutation
@@ -419,6 +581,27 @@ func (suo *StudentUpdateOne) Mutation() *StudentMutation {
 func (suo *StudentUpdateOne) ClearDepartment() *StudentUpdateOne {
 	suo.mutation.ClearDepartment()
 	return suo
+}
+
+// ClearClasses clears all "classes" edges to the Class entity.
+func (suo *StudentUpdateOne) ClearClasses() *StudentUpdateOne {
+	suo.mutation.ClearClasses()
+	return suo
+}
+
+// RemoveClassIDs removes the "classes" edge to Class entities by IDs.
+func (suo *StudentUpdateOne) RemoveClassIDs(ids ...uuid.UUID) *StudentUpdateOne {
+	suo.mutation.RemoveClassIDs(ids...)
+	return suo
+}
+
+// RemoveClasses removes "classes" edges to Class entities.
+func (suo *StudentUpdateOne) RemoveClasses(c ...*Class) *StudentUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return suo.RemoveClassIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -585,6 +768,20 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 			Column: student.FieldAdmissionNumber,
 		})
 	}
+	if value, ok := suo.mutation.Cgpa(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat32,
+			Value:  value,
+			Column: student.FieldCgpa,
+		})
+	}
+	if value, ok := suo.mutation.AddedCgpa(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat32,
+			Value:  value,
+			Column: student.FieldCgpa,
+		})
+	}
 	if value, ok := suo.mutation.Year(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
@@ -640,6 +837,60 @@ func (suo *StudentUpdateOne) sqlSave(ctx context.Context) (_node *Student, err e
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: department.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.ClassesTable,
+			Columns: student.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedClassesIDs(); len(nodes) > 0 && !suo.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.ClassesTable,
+			Columns: student.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.ClassesTable,
+			Columns: student.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
 				},
 			},
 		}

@@ -5,12 +5,16 @@ package ent
 import (
 	"college/ent/class"
 	"college/ent/predicate"
+	"college/ent/schema"
+	"college/ent/student"
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // ClassUpdate is the builder for updating Class entities.
@@ -26,9 +30,102 @@ func (cu *ClassUpdate) Where(ps ...predicate.Class) *ClassUpdate {
 	return cu
 }
 
+// SetTitle sets the "title" field.
+func (cu *ClassUpdate) SetTitle(s string) *ClassUpdate {
+	cu.mutation.SetTitle(s)
+	return cu
+}
+
+// SetCode sets the "code" field.
+func (cu *ClassUpdate) SetCode(s string) *ClassUpdate {
+	cu.mutation.SetCode(s)
+	return cu
+}
+
+// SetUnit sets the "unit" field.
+func (cu *ClassUpdate) SetUnit(i int) *ClassUpdate {
+	cu.mutation.ResetUnit()
+	cu.mutation.SetUnit(i)
+	return cu
+}
+
+// AddUnit adds i to the "unit" field.
+func (cu *ClassUpdate) AddUnit(i int) *ClassUpdate {
+	cu.mutation.AddUnit(i)
+	return cu
+}
+
+// SetSemester sets the "semester" field.
+func (cu *ClassUpdate) SetSemester(s schema.Semester) *ClassUpdate {
+	cu.mutation.SetSemester(s)
+	return cu
+}
+
+// SetLocation sets the "location" field.
+func (cu *ClassUpdate) SetLocation(s string) *ClassUpdate {
+	cu.mutation.SetLocation(s)
+	return cu
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (cu *ClassUpdate) SetCreatedAt(t time.Time) *ClassUpdate {
+	cu.mutation.SetCreatedAt(t)
+	return cu
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (cu *ClassUpdate) SetNillableCreatedAt(t *time.Time) *ClassUpdate {
+	if t != nil {
+		cu.SetCreatedAt(*t)
+	}
+	return cu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cu *ClassUpdate) SetUpdatedAt(t time.Time) *ClassUpdate {
+	cu.mutation.SetUpdatedAt(t)
+	return cu
+}
+
+// AddStudentIDs adds the "student" edge to the Student entity by IDs.
+func (cu *ClassUpdate) AddStudentIDs(ids ...uuid.UUID) *ClassUpdate {
+	cu.mutation.AddStudentIDs(ids...)
+	return cu
+}
+
+// AddStudent adds the "student" edges to the Student entity.
+func (cu *ClassUpdate) AddStudent(s ...*Student) *ClassUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return cu.AddStudentIDs(ids...)
+}
+
 // Mutation returns the ClassMutation object of the builder.
 func (cu *ClassUpdate) Mutation() *ClassMutation {
 	return cu.mutation
+}
+
+// ClearStudent clears all "student" edges to the Student entity.
+func (cu *ClassUpdate) ClearStudent() *ClassUpdate {
+	cu.mutation.ClearStudent()
+	return cu
+}
+
+// RemoveStudentIDs removes the "student" edge to Student entities by IDs.
+func (cu *ClassUpdate) RemoveStudentIDs(ids ...uuid.UUID) *ClassUpdate {
+	cu.mutation.RemoveStudentIDs(ids...)
+	return cu
+}
+
+// RemoveStudent removes "student" edges to Student entities.
+func (cu *ClassUpdate) RemoveStudent(s ...*Student) *ClassUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return cu.RemoveStudentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -37,13 +134,20 @@ func (cu *ClassUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	cu.defaults()
 	if len(cu.hooks) == 0 {
+		if err = cu.check(); err != nil {
+			return 0, err
+		}
 		affected, err = cu.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*ClassMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = cu.check(); err != nil {
+				return 0, err
 			}
 			cu.mutation = mutation
 			affected, err = cu.sqlSave(ctx)
@@ -85,13 +189,51 @@ func (cu *ClassUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cu *ClassUpdate) defaults() {
+	if _, ok := cu.mutation.UpdatedAt(); !ok {
+		v := class.UpdateDefaultUpdatedAt()
+		cu.mutation.SetUpdatedAt(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (cu *ClassUpdate) check() error {
+	if v, ok := cu.mutation.Title(); ok {
+		if err := class.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf("ent: validator failed for field \"title\": %w", err)}
+		}
+	}
+	if v, ok := cu.mutation.Code(); ok {
+		if err := class.CodeValidator(v); err != nil {
+			return &ValidationError{Name: "code", err: fmt.Errorf("ent: validator failed for field \"code\": %w", err)}
+		}
+	}
+	if v, ok := cu.mutation.Unit(); ok {
+		if err := class.UnitValidator(v); err != nil {
+			return &ValidationError{Name: "unit", err: fmt.Errorf("ent: validator failed for field \"unit\": %w", err)}
+		}
+	}
+	if v, ok := cu.mutation.Semester(); ok {
+		if err := class.SemesterValidator(v); err != nil {
+			return &ValidationError{Name: "semester", err: fmt.Errorf("ent: validator failed for field \"semester\": %w", err)}
+		}
+	}
+	if v, ok := cu.mutation.Location(); ok {
+		if err := class.LocationValidator(v); err != nil {
+			return &ValidationError{Name: "location", err: fmt.Errorf("ent: validator failed for field \"location\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (cu *ClassUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   class.Table,
 			Columns: class.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: class.FieldID,
 			},
 		},
@@ -102,6 +244,116 @@ func (cu *ClassUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := cu.mutation.Title(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldTitle,
+		})
+	}
+	if value, ok := cu.mutation.Code(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldCode,
+		})
+	}
+	if value, ok := cu.mutation.Unit(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: class.FieldUnit,
+		})
+	}
+	if value, ok := cu.mutation.AddedUnit(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: class.FieldUnit,
+		})
+	}
+	if value, ok := cu.mutation.Semester(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: class.FieldSemester,
+		})
+	}
+	if value, ok := cu.mutation.Location(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldLocation,
+		})
+	}
+	if value, ok := cu.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: class.FieldCreatedAt,
+		})
+	}
+	if value, ok := cu.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: class.FieldUpdatedAt,
+		})
+	}
+	if cu.mutation.StudentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   class.StudentTable,
+			Columns: class.StudentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: student.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedStudentIDs(); len(nodes) > 0 && !cu.mutation.StudentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   class.StudentTable,
+			Columns: class.StudentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: student.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.StudentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   class.StudentTable,
+			Columns: class.StudentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: student.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -122,9 +374,102 @@ type ClassUpdateOne struct {
 	mutation *ClassMutation
 }
 
+// SetTitle sets the "title" field.
+func (cuo *ClassUpdateOne) SetTitle(s string) *ClassUpdateOne {
+	cuo.mutation.SetTitle(s)
+	return cuo
+}
+
+// SetCode sets the "code" field.
+func (cuo *ClassUpdateOne) SetCode(s string) *ClassUpdateOne {
+	cuo.mutation.SetCode(s)
+	return cuo
+}
+
+// SetUnit sets the "unit" field.
+func (cuo *ClassUpdateOne) SetUnit(i int) *ClassUpdateOne {
+	cuo.mutation.ResetUnit()
+	cuo.mutation.SetUnit(i)
+	return cuo
+}
+
+// AddUnit adds i to the "unit" field.
+func (cuo *ClassUpdateOne) AddUnit(i int) *ClassUpdateOne {
+	cuo.mutation.AddUnit(i)
+	return cuo
+}
+
+// SetSemester sets the "semester" field.
+func (cuo *ClassUpdateOne) SetSemester(s schema.Semester) *ClassUpdateOne {
+	cuo.mutation.SetSemester(s)
+	return cuo
+}
+
+// SetLocation sets the "location" field.
+func (cuo *ClassUpdateOne) SetLocation(s string) *ClassUpdateOne {
+	cuo.mutation.SetLocation(s)
+	return cuo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (cuo *ClassUpdateOne) SetCreatedAt(t time.Time) *ClassUpdateOne {
+	cuo.mutation.SetCreatedAt(t)
+	return cuo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (cuo *ClassUpdateOne) SetNillableCreatedAt(t *time.Time) *ClassUpdateOne {
+	if t != nil {
+		cuo.SetCreatedAt(*t)
+	}
+	return cuo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cuo *ClassUpdateOne) SetUpdatedAt(t time.Time) *ClassUpdateOne {
+	cuo.mutation.SetUpdatedAt(t)
+	return cuo
+}
+
+// AddStudentIDs adds the "student" edge to the Student entity by IDs.
+func (cuo *ClassUpdateOne) AddStudentIDs(ids ...uuid.UUID) *ClassUpdateOne {
+	cuo.mutation.AddStudentIDs(ids...)
+	return cuo
+}
+
+// AddStudent adds the "student" edges to the Student entity.
+func (cuo *ClassUpdateOne) AddStudent(s ...*Student) *ClassUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return cuo.AddStudentIDs(ids...)
+}
+
 // Mutation returns the ClassMutation object of the builder.
 func (cuo *ClassUpdateOne) Mutation() *ClassMutation {
 	return cuo.mutation
+}
+
+// ClearStudent clears all "student" edges to the Student entity.
+func (cuo *ClassUpdateOne) ClearStudent() *ClassUpdateOne {
+	cuo.mutation.ClearStudent()
+	return cuo
+}
+
+// RemoveStudentIDs removes the "student" edge to Student entities by IDs.
+func (cuo *ClassUpdateOne) RemoveStudentIDs(ids ...uuid.UUID) *ClassUpdateOne {
+	cuo.mutation.RemoveStudentIDs(ids...)
+	return cuo
+}
+
+// RemoveStudent removes "student" edges to Student entities.
+func (cuo *ClassUpdateOne) RemoveStudent(s ...*Student) *ClassUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return cuo.RemoveStudentIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -140,13 +485,20 @@ func (cuo *ClassUpdateOne) Save(ctx context.Context) (*Class, error) {
 		err  error
 		node *Class
 	)
+	cuo.defaults()
 	if len(cuo.hooks) == 0 {
+		if err = cuo.check(); err != nil {
+			return nil, err
+		}
 		node, err = cuo.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*ClassMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = cuo.check(); err != nil {
+				return nil, err
 			}
 			cuo.mutation = mutation
 			node, err = cuo.sqlSave(ctx)
@@ -188,13 +540,51 @@ func (cuo *ClassUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cuo *ClassUpdateOne) defaults() {
+	if _, ok := cuo.mutation.UpdatedAt(); !ok {
+		v := class.UpdateDefaultUpdatedAt()
+		cuo.mutation.SetUpdatedAt(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (cuo *ClassUpdateOne) check() error {
+	if v, ok := cuo.mutation.Title(); ok {
+		if err := class.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf("ent: validator failed for field \"title\": %w", err)}
+		}
+	}
+	if v, ok := cuo.mutation.Code(); ok {
+		if err := class.CodeValidator(v); err != nil {
+			return &ValidationError{Name: "code", err: fmt.Errorf("ent: validator failed for field \"code\": %w", err)}
+		}
+	}
+	if v, ok := cuo.mutation.Unit(); ok {
+		if err := class.UnitValidator(v); err != nil {
+			return &ValidationError{Name: "unit", err: fmt.Errorf("ent: validator failed for field \"unit\": %w", err)}
+		}
+	}
+	if v, ok := cuo.mutation.Semester(); ok {
+		if err := class.SemesterValidator(v); err != nil {
+			return &ValidationError{Name: "semester", err: fmt.Errorf("ent: validator failed for field \"semester\": %w", err)}
+		}
+	}
+	if v, ok := cuo.mutation.Location(); ok {
+		if err := class.LocationValidator(v); err != nil {
+			return &ValidationError{Name: "location", err: fmt.Errorf("ent: validator failed for field \"location\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (cuo *ClassUpdateOne) sqlSave(ctx context.Context) (_node *Class, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   class.Table,
 			Columns: class.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: class.FieldID,
 			},
 		},
@@ -222,6 +612,116 @@ func (cuo *ClassUpdateOne) sqlSave(ctx context.Context) (_node *Class, err error
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := cuo.mutation.Title(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldTitle,
+		})
+	}
+	if value, ok := cuo.mutation.Code(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldCode,
+		})
+	}
+	if value, ok := cuo.mutation.Unit(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: class.FieldUnit,
+		})
+	}
+	if value, ok := cuo.mutation.AddedUnit(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: class.FieldUnit,
+		})
+	}
+	if value, ok := cuo.mutation.Semester(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: class.FieldSemester,
+		})
+	}
+	if value, ok := cuo.mutation.Location(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldLocation,
+		})
+	}
+	if value, ok := cuo.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: class.FieldCreatedAt,
+		})
+	}
+	if value, ok := cuo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: class.FieldUpdatedAt,
+		})
+	}
+	if cuo.mutation.StudentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   class.StudentTable,
+			Columns: class.StudentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: student.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedStudentIDs(); len(nodes) > 0 && !cuo.mutation.StudentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   class.StudentTable,
+			Columns: class.StudentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: student.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.StudentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   class.StudentTable,
+			Columns: class.StudentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: student.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Class{config: cuo.config}
 	_spec.Assign = _node.assignValues

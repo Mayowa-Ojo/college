@@ -4,33 +4,37 @@ package class
 
 import (
 	"college/ent/predicate"
+	"college/ent/schema"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Class {
+func ID(id uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Class {
+func IDEQ(id uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Class {
+func IDNEQ(id uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
 	})
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Class {
+func IDIn(ids ...uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -47,7 +51,7 @@ func IDIn(ids ...int) predicate.Class {
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Class {
+func IDNotIn(ids ...uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -64,30 +68,711 @@ func IDNotIn(ids ...int) predicate.Class {
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Class {
+func IDGT(id uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
 	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Class {
+func IDGTE(id uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
 	})
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Class {
+func IDLT(id uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
 	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Class {
+func IDLTE(id uuid.UUID) predicate.Class {
 	return predicate.Class(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
+	})
+}
+
+// Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
+func Title(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTitle), v))
+	})
+}
+
+// Code applies equality check predicate on the "code" field. It's identical to CodeEQ.
+func Code(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCode), v))
+	})
+}
+
+// Unit applies equality check predicate on the "unit" field. It's identical to UnitEQ.
+func Unit(v int) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUnit), v))
+	})
+}
+
+// Location applies equality check predicate on the "location" field. It's identical to LocationEQ.
+func Location(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldLocation), v))
+	})
+}
+
+// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
+func CreatedAt(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
+func UpdatedAt(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// TitleEQ applies the EQ predicate on the "title" field.
+func TitleEQ(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTitle), v))
+	})
+}
+
+// TitleNEQ applies the NEQ predicate on the "title" field.
+func TitleNEQ(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTitle), v))
+	})
+}
+
+// TitleIn applies the In predicate on the "title" field.
+func TitleIn(vs ...string) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldTitle), v...))
+	})
+}
+
+// TitleNotIn applies the NotIn predicate on the "title" field.
+func TitleNotIn(vs ...string) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldTitle), v...))
+	})
+}
+
+// TitleGT applies the GT predicate on the "title" field.
+func TitleGT(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldTitle), v))
+	})
+}
+
+// TitleGTE applies the GTE predicate on the "title" field.
+func TitleGTE(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldTitle), v))
+	})
+}
+
+// TitleLT applies the LT predicate on the "title" field.
+func TitleLT(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldTitle), v))
+	})
+}
+
+// TitleLTE applies the LTE predicate on the "title" field.
+func TitleLTE(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldTitle), v))
+	})
+}
+
+// TitleContains applies the Contains predicate on the "title" field.
+func TitleContains(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldTitle), v))
+	})
+}
+
+// TitleHasPrefix applies the HasPrefix predicate on the "title" field.
+func TitleHasPrefix(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldTitle), v))
+	})
+}
+
+// TitleHasSuffix applies the HasSuffix predicate on the "title" field.
+func TitleHasSuffix(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldTitle), v))
+	})
+}
+
+// TitleEqualFold applies the EqualFold predicate on the "title" field.
+func TitleEqualFold(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldTitle), v))
+	})
+}
+
+// TitleContainsFold applies the ContainsFold predicate on the "title" field.
+func TitleContainsFold(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldTitle), v))
+	})
+}
+
+// CodeEQ applies the EQ predicate on the "code" field.
+func CodeEQ(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCode), v))
+	})
+}
+
+// CodeNEQ applies the NEQ predicate on the "code" field.
+func CodeNEQ(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCode), v))
+	})
+}
+
+// CodeIn applies the In predicate on the "code" field.
+func CodeIn(vs ...string) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCode), v...))
+	})
+}
+
+// CodeNotIn applies the NotIn predicate on the "code" field.
+func CodeNotIn(vs ...string) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCode), v...))
+	})
+}
+
+// CodeGT applies the GT predicate on the "code" field.
+func CodeGT(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCode), v))
+	})
+}
+
+// CodeGTE applies the GTE predicate on the "code" field.
+func CodeGTE(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCode), v))
+	})
+}
+
+// CodeLT applies the LT predicate on the "code" field.
+func CodeLT(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCode), v))
+	})
+}
+
+// CodeLTE applies the LTE predicate on the "code" field.
+func CodeLTE(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCode), v))
+	})
+}
+
+// CodeContains applies the Contains predicate on the "code" field.
+func CodeContains(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldCode), v))
+	})
+}
+
+// CodeHasPrefix applies the HasPrefix predicate on the "code" field.
+func CodeHasPrefix(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldCode), v))
+	})
+}
+
+// CodeHasSuffix applies the HasSuffix predicate on the "code" field.
+func CodeHasSuffix(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldCode), v))
+	})
+}
+
+// CodeEqualFold applies the EqualFold predicate on the "code" field.
+func CodeEqualFold(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldCode), v))
+	})
+}
+
+// CodeContainsFold applies the ContainsFold predicate on the "code" field.
+func CodeContainsFold(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldCode), v))
+	})
+}
+
+// UnitEQ applies the EQ predicate on the "unit" field.
+func UnitEQ(v int) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUnit), v))
+	})
+}
+
+// UnitNEQ applies the NEQ predicate on the "unit" field.
+func UnitNEQ(v int) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUnit), v))
+	})
+}
+
+// UnitIn applies the In predicate on the "unit" field.
+func UnitIn(vs ...int) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldUnit), v...))
+	})
+}
+
+// UnitNotIn applies the NotIn predicate on the "unit" field.
+func UnitNotIn(vs ...int) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldUnit), v...))
+	})
+}
+
+// UnitGT applies the GT predicate on the "unit" field.
+func UnitGT(v int) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldUnit), v))
+	})
+}
+
+// UnitGTE applies the GTE predicate on the "unit" field.
+func UnitGTE(v int) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldUnit), v))
+	})
+}
+
+// UnitLT applies the LT predicate on the "unit" field.
+func UnitLT(v int) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldUnit), v))
+	})
+}
+
+// UnitLTE applies the LTE predicate on the "unit" field.
+func UnitLTE(v int) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldUnit), v))
+	})
+}
+
+// SemesterEQ applies the EQ predicate on the "semester" field.
+func SemesterEQ(v schema.Semester) predicate.Class {
+	vc := v
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSemester), vc))
+	})
+}
+
+// SemesterNEQ applies the NEQ predicate on the "semester" field.
+func SemesterNEQ(v schema.Semester) predicate.Class {
+	vc := v
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSemester), vc))
+	})
+}
+
+// SemesterIn applies the In predicate on the "semester" field.
+func SemesterIn(vs ...schema.Semester) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldSemester), v...))
+	})
+}
+
+// SemesterNotIn applies the NotIn predicate on the "semester" field.
+func SemesterNotIn(vs ...schema.Semester) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldSemester), v...))
+	})
+}
+
+// LocationEQ applies the EQ predicate on the "location" field.
+func LocationEQ(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldLocation), v))
+	})
+}
+
+// LocationNEQ applies the NEQ predicate on the "location" field.
+func LocationNEQ(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldLocation), v))
+	})
+}
+
+// LocationIn applies the In predicate on the "location" field.
+func LocationIn(vs ...string) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldLocation), v...))
+	})
+}
+
+// LocationNotIn applies the NotIn predicate on the "location" field.
+func LocationNotIn(vs ...string) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldLocation), v...))
+	})
+}
+
+// LocationGT applies the GT predicate on the "location" field.
+func LocationGT(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldLocation), v))
+	})
+}
+
+// LocationGTE applies the GTE predicate on the "location" field.
+func LocationGTE(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldLocation), v))
+	})
+}
+
+// LocationLT applies the LT predicate on the "location" field.
+func LocationLT(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldLocation), v))
+	})
+}
+
+// LocationLTE applies the LTE predicate on the "location" field.
+func LocationLTE(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldLocation), v))
+	})
+}
+
+// LocationContains applies the Contains predicate on the "location" field.
+func LocationContains(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldLocation), v))
+	})
+}
+
+// LocationHasPrefix applies the HasPrefix predicate on the "location" field.
+func LocationHasPrefix(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldLocation), v))
+	})
+}
+
+// LocationHasSuffix applies the HasSuffix predicate on the "location" field.
+func LocationHasSuffix(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldLocation), v))
+	})
+}
+
+// LocationEqualFold applies the EqualFold predicate on the "location" field.
+func LocationEqualFold(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldLocation), v))
+	})
+}
+
+// LocationContainsFold applies the ContainsFold predicate on the "location" field.
+func LocationContainsFold(v string) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldLocation), v))
+	})
+}
+
+// CreatedAtEQ applies the EQ predicate on the "created_at" field.
+func CreatedAtEQ(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
+func CreatedAtNEQ(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtIn applies the In predicate on the "created_at" field.
+func CreatedAtIn(vs ...time.Time) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCreatedAt), v...))
+	})
+}
+
+// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
+func CreatedAtNotIn(vs ...time.Time) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCreatedAt), v...))
+	})
+}
+
+// CreatedAtGT applies the GT predicate on the "created_at" field.
+func CreatedAtGT(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtGTE applies the GTE predicate on the "created_at" field.
+func CreatedAtGTE(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtLT applies the LT predicate on the "created_at" field.
+func CreatedAtLT(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtLTE applies the LTE predicate on the "created_at" field.
+func CreatedAtLTE(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
+	})
+}
+
+// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
+func UpdatedAtEQ(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
+func UpdatedAtNEQ(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtIn applies the In predicate on the "updated_at" field.
+func UpdatedAtIn(vs ...time.Time) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldUpdatedAt), v...))
+	})
+}
+
+// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
+func UpdatedAtNotIn(vs ...time.Time) predicate.Class {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Class(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldUpdatedAt), v...))
+	})
+}
+
+// UpdatedAtGT applies the GT predicate on the "updated_at" field.
+func UpdatedAtGT(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
+func UpdatedAtGTE(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtLT applies the LT predicate on the "updated_at" field.
+func UpdatedAtLT(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
+func UpdatedAtLTE(v time.Time) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// HasStudent applies the HasEdge predicate on the "student" edge.
+func HasStudent() predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(StudentTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, StudentTable, StudentPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStudentWith applies the HasEdge predicate on the "student" edge with a given conditions (other predicates).
+func HasStudentWith(preds ...predicate.Student) predicate.Class {
+	return predicate.Class(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(StudentInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, StudentTable, StudentPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

@@ -10,7 +10,14 @@ import (
 var (
 	// ClassesColumns holds the columns for the "classes" table.
 	ClassesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "title", Type: field.TypeString, Size: 250},
+		{Name: "code", Type: field.TypeString, Size: 8},
+		{Name: "unit", Type: field.TypeInt},
+		{Name: "semester", Type: field.TypeEnum, Enums: []string{"FIRST", "SECOND"}},
+		{Name: "location", Type: field.TypeString, Size: 250},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// ClassesTable holds the schema information for the "classes" table.
 	ClassesTable = &schema.Table{
@@ -21,7 +28,7 @@ var (
 	// DepartmentsColumns holds the columns for the "departments" table.
 	DepartmentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "name", Type: field.TypeString, Size: 250},
+		{Name: "name", Type: field.TypeString, Unique: true, Size: 250},
 		{Name: "code", Type: field.TypeString, Size: 5},
 		{Name: "telephone", Type: field.TypeString, Size: 15},
 		{Name: "created_at", Type: field.TypeTime},
@@ -50,6 +57,7 @@ var (
 		{Name: "lastname", Type: field.TypeString, Size: 250},
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "admission_number", Type: field.TypeString},
+		{Name: "cgpa", Type: field.TypeFloat32, Default: 0},
 		{Name: "year", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -63,9 +71,34 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "students_departments_students",
-				Columns:    []*schema.Column{StudentsColumns[8]},
+				Columns:    []*schema.Column{StudentsColumns[9]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// ClassStudentColumns holds the columns for the "class_student" table.
+	ClassStudentColumns = []*schema.Column{
+		{Name: "class_id", Type: field.TypeUUID},
+		{Name: "student_id", Type: field.TypeUUID},
+	}
+	// ClassStudentTable holds the schema information for the "class_student" table.
+	ClassStudentTable = &schema.Table{
+		Name:       "class_student",
+		Columns:    ClassStudentColumns,
+		PrimaryKey: []*schema.Column{ClassStudentColumns[0], ClassStudentColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "class_student_class_id",
+				Columns:    []*schema.Column{ClassStudentColumns[0]},
+				RefColumns: []*schema.Column{ClassesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "class_student_student_id",
+				Columns:    []*schema.Column{ClassStudentColumns[1]},
+				RefColumns: []*schema.Column{StudentsColumns[0]},
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -75,9 +108,12 @@ var (
 		DepartmentsTable,
 		StaffsTable,
 		StudentsTable,
+		ClassStudentTable,
 	}
 )
 
 func init() {
 	StudentsTable.ForeignKeys[0].RefTable = DepartmentsTable
+	ClassStudentTable.ForeignKeys[0].RefTable = ClassesTable
+	ClassStudentTable.ForeignKeys[1].RefTable = StudentsTable
 }

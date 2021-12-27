@@ -4,11 +4,16 @@ package ent
 
 import (
 	"college/ent/class"
+	"college/ent/schema"
+	"college/ent/student"
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // ClassCreate is the builder for creating a Class entity.
@@ -16,6 +21,85 @@ type ClassCreate struct {
 	config
 	mutation *ClassMutation
 	hooks    []Hook
+}
+
+// SetTitle sets the "title" field.
+func (cc *ClassCreate) SetTitle(s string) *ClassCreate {
+	cc.mutation.SetTitle(s)
+	return cc
+}
+
+// SetCode sets the "code" field.
+func (cc *ClassCreate) SetCode(s string) *ClassCreate {
+	cc.mutation.SetCode(s)
+	return cc
+}
+
+// SetUnit sets the "unit" field.
+func (cc *ClassCreate) SetUnit(i int) *ClassCreate {
+	cc.mutation.SetUnit(i)
+	return cc
+}
+
+// SetSemester sets the "semester" field.
+func (cc *ClassCreate) SetSemester(s schema.Semester) *ClassCreate {
+	cc.mutation.SetSemester(s)
+	return cc
+}
+
+// SetLocation sets the "location" field.
+func (cc *ClassCreate) SetLocation(s string) *ClassCreate {
+	cc.mutation.SetLocation(s)
+	return cc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (cc *ClassCreate) SetCreatedAt(t time.Time) *ClassCreate {
+	cc.mutation.SetCreatedAt(t)
+	return cc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (cc *ClassCreate) SetNillableCreatedAt(t *time.Time) *ClassCreate {
+	if t != nil {
+		cc.SetCreatedAt(*t)
+	}
+	return cc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (cc *ClassCreate) SetUpdatedAt(t time.Time) *ClassCreate {
+	cc.mutation.SetUpdatedAt(t)
+	return cc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (cc *ClassCreate) SetNillableUpdatedAt(t *time.Time) *ClassCreate {
+	if t != nil {
+		cc.SetUpdatedAt(*t)
+	}
+	return cc
+}
+
+// SetID sets the "id" field.
+func (cc *ClassCreate) SetID(u uuid.UUID) *ClassCreate {
+	cc.mutation.SetID(u)
+	return cc
+}
+
+// AddStudentIDs adds the "student" edge to the Student entity by IDs.
+func (cc *ClassCreate) AddStudentIDs(ids ...uuid.UUID) *ClassCreate {
+	cc.mutation.AddStudentIDs(ids...)
+	return cc
+}
+
+// AddStudent adds the "student" edges to the Student entity.
+func (cc *ClassCreate) AddStudent(s ...*Student) *ClassCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return cc.AddStudentIDs(ids...)
 }
 
 // Mutation returns the ClassMutation object of the builder.
@@ -29,6 +113,7 @@ func (cc *ClassCreate) Save(ctx context.Context) (*Class, error) {
 		err  error
 		node *Class
 	)
+	cc.defaults()
 	if len(cc.hooks) == 0 {
 		if err = cc.check(); err != nil {
 			return nil, err
@@ -86,8 +171,70 @@ func (cc *ClassCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (cc *ClassCreate) defaults() {
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		v := class.DefaultCreatedAt()
+		cc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := cc.mutation.UpdatedAt(); !ok {
+		v := class.DefaultUpdatedAt()
+		cc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := cc.mutation.ID(); !ok {
+		v := class.DefaultID()
+		cc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (cc *ClassCreate) check() error {
+	if _, ok := cc.mutation.Title(); !ok {
+		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "title"`)}
+	}
+	if v, ok := cc.mutation.Title(); ok {
+		if err := class.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "title": %w`, err)}
+		}
+	}
+	if _, ok := cc.mutation.Code(); !ok {
+		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "code"`)}
+	}
+	if v, ok := cc.mutation.Code(); ok {
+		if err := class.CodeValidator(v); err != nil {
+			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "code": %w`, err)}
+		}
+	}
+	if _, ok := cc.mutation.Unit(); !ok {
+		return &ValidationError{Name: "unit", err: errors.New(`ent: missing required field "unit"`)}
+	}
+	if v, ok := cc.mutation.Unit(); ok {
+		if err := class.UnitValidator(v); err != nil {
+			return &ValidationError{Name: "unit", err: fmt.Errorf(`ent: validator failed for field "unit": %w`, err)}
+		}
+	}
+	if _, ok := cc.mutation.Semester(); !ok {
+		return &ValidationError{Name: "semester", err: errors.New(`ent: missing required field "semester"`)}
+	}
+	if v, ok := cc.mutation.Semester(); ok {
+		if err := class.SemesterValidator(v); err != nil {
+			return &ValidationError{Name: "semester", err: fmt.Errorf(`ent: validator failed for field "semester": %w`, err)}
+		}
+	}
+	if _, ok := cc.mutation.Location(); !ok {
+		return &ValidationError{Name: "location", err: errors.New(`ent: missing required field "location"`)}
+	}
+	if v, ok := cc.mutation.Location(); ok {
+		if err := class.LocationValidator(v); err != nil {
+			return &ValidationError{Name: "location", err: fmt.Errorf(`ent: validator failed for field "location": %w`, err)}
+		}
+	}
+	if _, ok := cc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+	}
+	if _, ok := cc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+	}
 	return nil
 }
 
@@ -99,8 +246,9 @@ func (cc *ClassCreate) sqlSave(ctx context.Context) (*Class, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(uuid.UUID)
+	}
 	return _node, nil
 }
 
@@ -110,11 +258,90 @@ func (cc *ClassCreate) createSpec() (*Class, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: class.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: class.FieldID,
 			},
 		}
 	)
+	if id, ok := cc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
+	if value, ok := cc.mutation.Title(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldTitle,
+		})
+		_node.Title = value
+	}
+	if value, ok := cc.mutation.Code(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldCode,
+		})
+		_node.Code = value
+	}
+	if value, ok := cc.mutation.Unit(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: class.FieldUnit,
+		})
+		_node.Unit = value
+	}
+	if value, ok := cc.mutation.Semester(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: class.FieldSemester,
+		})
+		_node.Semester = value
+	}
+	if value, ok := cc.mutation.Location(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: class.FieldLocation,
+		})
+		_node.Location = value
+	}
+	if value, ok := cc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: class.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := cc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: class.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
+	}
+	if nodes := cc.mutation.StudentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   class.StudentTable,
+			Columns: class.StudentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: student.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -132,6 +359,7 @@ func (ccb *ClassCreateBulk) Save(ctx context.Context) ([]*Class, error) {
 	for i := range ccb.builders {
 		func(i int, root context.Context) {
 			builder := ccb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ClassMutation)
 				if !ok {
@@ -159,10 +387,6 @@ func (ccb *ClassCreateBulk) Save(ctx context.Context) ([]*Class, error) {
 				}
 				mutation.id = &nodes[i].ID
 				mutation.done = true
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

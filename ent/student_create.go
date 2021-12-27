@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"college/ent/class"
 	"college/ent/department"
 	"college/ent/student"
 	"context"
@@ -43,6 +44,20 @@ func (sc *StudentCreate) SetEmail(s string) *StudentCreate {
 // SetAdmissionNumber sets the "admission_number" field.
 func (sc *StudentCreate) SetAdmissionNumber(s string) *StudentCreate {
 	sc.mutation.SetAdmissionNumber(s)
+	return sc
+}
+
+// SetCgpa sets the "cgpa" field.
+func (sc *StudentCreate) SetCgpa(f float32) *StudentCreate {
+	sc.mutation.SetCgpa(f)
+	return sc
+}
+
+// SetNillableCgpa sets the "cgpa" field if the given value is not nil.
+func (sc *StudentCreate) SetNillableCgpa(f *float32) *StudentCreate {
+	if f != nil {
+		sc.SetCgpa(*f)
+	}
 	return sc
 }
 
@@ -95,6 +110,21 @@ func (sc *StudentCreate) SetID(u uuid.UUID) *StudentCreate {
 // SetDepartment sets the "department" edge to the Department entity.
 func (sc *StudentCreate) SetDepartment(d *Department) *StudentCreate {
 	return sc.SetDepartmentID(d.ID)
+}
+
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (sc *StudentCreate) AddClassIDs(ids ...uuid.UUID) *StudentCreate {
+	sc.mutation.AddClassIDs(ids...)
+	return sc
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (sc *StudentCreate) AddClasses(c ...*Class) *StudentCreate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return sc.AddClassIDs(ids...)
 }
 
 // Mutation returns the StudentMutation object of the builder.
@@ -168,6 +198,10 @@ func (sc *StudentCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (sc *StudentCreate) defaults() {
+	if _, ok := sc.mutation.Cgpa(); !ok {
+		v := student.DefaultCgpa
+		sc.mutation.SetCgpa(v)
+	}
 	if _, ok := sc.mutation.CreatedAt(); !ok {
 		v := student.DefaultCreatedAt()
 		sc.mutation.SetCreatedAt(v)
@@ -210,6 +244,9 @@ func (sc *StudentCreate) check() error {
 	}
 	if _, ok := sc.mutation.AdmissionNumber(); !ok {
 		return &ValidationError{Name: "admission_number", err: errors.New(`ent: missing required field "admission_number"`)}
+	}
+	if _, ok := sc.mutation.Cgpa(); !ok {
+		return &ValidationError{Name: "cgpa", err: errors.New(`ent: missing required field "cgpa"`)}
 	}
 	if _, ok := sc.mutation.Year(); !ok {
 		return &ValidationError{Name: "year", err: errors.New(`ent: missing required field "year"`)}
@@ -289,6 +326,14 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 		})
 		_node.AdmissionNumber = value
 	}
+	if value, ok := sc.mutation.Cgpa(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeFloat32,
+			Value:  value,
+			Column: student.FieldCgpa,
+		})
+		_node.Cgpa = value
+	}
 	if value, ok := sc.mutation.Year(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
@@ -331,6 +376,25 @@ func (sc *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.DepartmentID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   student.ClassesTable,
+			Columns: student.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

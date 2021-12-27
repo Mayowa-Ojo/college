@@ -26,6 +26,8 @@ type Student struct {
 	Email string `json:"email,omitempty"`
 	// AdmissionNumber holds the value of the "admission_number" field.
 	AdmissionNumber string `json:"admission_number,omitempty"`
+	// Cgpa holds the value of the "cgpa" field.
+	Cgpa float32 `json:"cgpa,omitempty"`
 	// Year holds the value of the "year" field.
 	Year int `json:"year,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -43,9 +45,11 @@ type Student struct {
 type StudentEdges struct {
 	// Department holds the value of the department edge.
 	Department *Department `json:"department,omitempty"`
+	// Classes holds the value of the classes edge.
+	Classes []*Class `json:"classes,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // DepartmentOrErr returns the Department value or an error if the edge
@@ -62,11 +66,22 @@ func (e StudentEdges) DepartmentOrErr() (*Department, error) {
 	return nil, &NotLoadedError{edge: "department"}
 }
 
+// ClassesOrErr returns the Classes value or an error if the edge
+// was not loaded in eager-loading.
+func (e StudentEdges) ClassesOrErr() ([]*Class, error) {
+	if e.loadedTypes[1] {
+		return e.Classes, nil
+	}
+	return nil, &NotLoadedError{edge: "classes"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Student) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case student.FieldCgpa:
+			values[i] = new(sql.NullFloat64)
 		case student.FieldYear:
 			values[i] = new(sql.NullInt64)
 		case student.FieldFirstname, student.FieldLastname, student.FieldEmail, student.FieldAdmissionNumber:
@@ -120,6 +135,12 @@ func (s *Student) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				s.AdmissionNumber = value.String
 			}
+		case student.FieldCgpa:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field cgpa", values[i])
+			} else if value.Valid {
+				s.Cgpa = float32(value.Float64)
+			}
 		case student.FieldYear:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field year", values[i])
@@ -154,6 +175,11 @@ func (s *Student) QueryDepartment() *DepartmentQuery {
 	return (&StudentClient{config: s.config}).QueryDepartment(s)
 }
 
+// QueryClasses queries the "classes" edge of the Student entity.
+func (s *Student) QueryClasses() *ClassQuery {
+	return (&StudentClient{config: s.config}).QueryClasses(s)
+}
+
 // Update returns a builder for updating this Student.
 // Note that you need to call Student.Unwrap() before calling this method if this Student
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -185,6 +211,8 @@ func (s *Student) String() string {
 	builder.WriteString(s.Email)
 	builder.WriteString(", admission_number=")
 	builder.WriteString(s.AdmissionNumber)
+	builder.WriteString(", cgpa=")
+	builder.WriteString(fmt.Sprintf("%v", s.Cgpa))
 	builder.WriteString(", year=")
 	builder.WriteString(fmt.Sprintf("%v", s.Year))
 	builder.WriteString(", created_at=")

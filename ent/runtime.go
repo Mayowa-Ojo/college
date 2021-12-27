@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"college/ent/class"
 	"college/ent/department"
 	"college/ent/schema"
 	"college/ent/student"
@@ -15,6 +16,52 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	classFields := schema.Class{}.Fields()
+	_ = classFields
+	// classDescTitle is the schema descriptor for title field.
+	classDescTitle := classFields[1].Descriptor()
+	// class.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	class.TitleValidator = classDescTitle.Validators[0].(func(string) error)
+	// classDescCode is the schema descriptor for code field.
+	classDescCode := classFields[2].Descriptor()
+	// class.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	class.CodeValidator = classDescCode.Validators[0].(func(string) error)
+	// classDescUnit is the schema descriptor for unit field.
+	classDescUnit := classFields[3].Descriptor()
+	// class.UnitValidator is a validator for the "unit" field. It is called by the builders before save.
+	class.UnitValidator = func() func(int) error {
+		validators := classDescUnit.Validators
+		fns := [...]func(int) error{
+			validators[0].(func(int) error),
+			validators[1].(func(int) error),
+		}
+		return func(unit int) error {
+			for _, fn := range fns {
+				if err := fn(unit); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// classDescLocation is the schema descriptor for location field.
+	classDescLocation := classFields[5].Descriptor()
+	// class.LocationValidator is a validator for the "location" field. It is called by the builders before save.
+	class.LocationValidator = classDescLocation.Validators[0].(func(string) error)
+	// classDescCreatedAt is the schema descriptor for created_at field.
+	classDescCreatedAt := classFields[6].Descriptor()
+	// class.DefaultCreatedAt holds the default value on creation for the created_at field.
+	class.DefaultCreatedAt = classDescCreatedAt.Default.(func() time.Time)
+	// classDescUpdatedAt is the schema descriptor for updated_at field.
+	classDescUpdatedAt := classFields[7].Descriptor()
+	// class.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	class.DefaultUpdatedAt = classDescUpdatedAt.Default.(func() time.Time)
+	// class.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	class.UpdateDefaultUpdatedAt = classDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// classDescID is the schema descriptor for id field.
+	classDescID := classFields[0].Descriptor()
+	// class.DefaultID holds the default value on creation for the id field.
+	class.DefaultID = classDescID.Default.(func() uuid.UUID)
 	departmentFields := schema.Department{}.Fields()
 	_ = departmentFields
 	// departmentDescName is the schema descriptor for name field.
@@ -57,8 +104,12 @@ func init() {
 	studentDescEmail := studentFields[3].Descriptor()
 	// student.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	student.EmailValidator = studentDescEmail.Validators[0].(func(string) error)
+	// studentDescCgpa is the schema descriptor for cgpa field.
+	studentDescCgpa := studentFields[5].Descriptor()
+	// student.DefaultCgpa holds the default value on creation for the cgpa field.
+	student.DefaultCgpa = studentDescCgpa.Default.(float32)
 	// studentDescYear is the schema descriptor for year field.
-	studentDescYear := studentFields[5].Descriptor()
+	studentDescYear := studentFields[6].Descriptor()
 	// student.YearValidator is a validator for the "year" field. It is called by the builders before save.
 	student.YearValidator = func() func(int) error {
 		validators := studentDescYear.Validators
@@ -76,11 +127,11 @@ func init() {
 		}
 	}()
 	// studentDescCreatedAt is the schema descriptor for created_at field.
-	studentDescCreatedAt := studentFields[6].Descriptor()
+	studentDescCreatedAt := studentFields[7].Descriptor()
 	// student.DefaultCreatedAt holds the default value on creation for the created_at field.
 	student.DefaultCreatedAt = studentDescCreatedAt.Default.(func() time.Time)
 	// studentDescUpdatedAt is the schema descriptor for updated_at field.
-	studentDescUpdatedAt := studentFields[7].Descriptor()
+	studentDescUpdatedAt := studentFields[8].Descriptor()
 	// student.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	student.DefaultUpdatedAt = studentDescUpdatedAt.Default.(func() time.Time)
 	// student.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

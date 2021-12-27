@@ -3,10 +3,12 @@
 package ent
 
 import (
+	"college/ent/class"
 	"college/ent/department"
 	"college/ent/predicate"
 	"college/ent/student"
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -28,6 +30,7 @@ type StudentQuery struct {
 	predicates []predicate.Student
 	// eager-loading edges.
 	withDepartment *DepartmentQuery
+	withClasses    *ClassQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -79,6 +82,28 @@ func (sq *StudentQuery) QueryDepartment() *DepartmentQuery {
 			sqlgraph.From(student.Table, student.FieldID, selector),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, student.DepartmentTable, student.DepartmentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryClasses chains the current query on the "classes" edge.
+func (sq *StudentQuery) QueryClasses() *ClassQuery {
+	query := &ClassQuery{config: sq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(student.Table, student.FieldID, selector),
+			sqlgraph.To(class.Table, class.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, student.ClassesTable, student.ClassesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -268,6 +293,7 @@ func (sq *StudentQuery) Clone() *StudentQuery {
 		order:          append([]OrderFunc{}, sq.order...),
 		predicates:     append([]predicate.Student{}, sq.predicates...),
 		withDepartment: sq.withDepartment.Clone(),
+		withClasses:    sq.withClasses.Clone(),
 		// clone intermediate query.
 		sql:  sq.sql.Clone(),
 		path: sq.path,
@@ -282,6 +308,17 @@ func (sq *StudentQuery) WithDepartment(opts ...func(*DepartmentQuery)) *StudentQ
 		opt(query)
 	}
 	sq.withDepartment = query
+	return sq
+}
+
+// WithClasses tells the query-builder to eager-load the nodes that are connected to
+// the "classes" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *StudentQuery) WithClasses(opts ...func(*ClassQuery)) *StudentQuery {
+	query := &ClassQuery{config: sq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withClasses = query
 	return sq
 }
 
@@ -350,8 +387,9 @@ func (sq *StudentQuery) sqlAll(ctx context.Context) ([]*Student, error) {
 	var (
 		nodes       = []*Student{}
 		_spec       = sq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			sq.withDepartment != nil,
+			sq.withClasses != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -396,6 +434,71 @@ func (sq *StudentQuery) sqlAll(ctx context.Context) ([]*Student, error) {
 			}
 			for i := range nodes {
 				nodes[i].Edges.Department = n
+			}
+		}
+	}
+
+	if query := sq.withClasses; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		ids := make(map[uuid.UUID]*Student, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
+			node.Edges.Classes = []*Class{}
+		}
+		var (
+			edgeids []uuid.UUID
+			edges   = make(map[uuid.UUID][]*Student)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: true,
+				Table:   student.ClassesTable,
+				Columns: student.ClassesPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(student.ClassesPrimaryKey[1], fks...))
+			},
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{new(uuid.UUID), new(uuid.UUID)}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*uuid.UUID)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*uuid.UUID)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := *eout
+				inValue := *ein
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				if _, ok := edges[inValue]; !ok {
+					edgeids = append(edgeids, inValue)
+				}
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, sq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "classes": %w`, err)
+		}
+		query.Where(class.IDIn(edgeids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := edges[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected "classes" node returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Classes = append(nodes[i].Edges.Classes, n)
 			}
 		}
 	}

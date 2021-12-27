@@ -5,7 +5,9 @@ package ent
 import (
 	"college/ent/class"
 	"college/ent/predicate"
+	"college/ent/student"
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -13,6 +15,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // ClassQuery is the builder for querying Class entities.
@@ -24,6 +27,8 @@ type ClassQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Class
+	// eager-loading edges.
+	withStudent *StudentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -60,6 +65,28 @@ func (cq *ClassQuery) Order(o ...OrderFunc) *ClassQuery {
 	return cq
 }
 
+// QueryStudent chains the current query on the "student" edge.
+func (cq *ClassQuery) QueryStudent() *StudentQuery {
+	query := &StudentQuery{config: cq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := cq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := cq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(class.Table, class.FieldID, selector),
+			sqlgraph.To(student.Table, student.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, class.StudentTable, class.StudentPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Class entity from the query.
 // Returns a *NotFoundError when no Class was found.
 func (cq *ClassQuery) First(ctx context.Context) (*Class, error) {
@@ -84,8 +111,8 @@ func (cq *ClassQuery) FirstX(ctx context.Context) *Class {
 
 // FirstID returns the first Class ID from the query.
 // Returns a *NotFoundError when no Class ID was found.
-func (cq *ClassQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (cq *ClassQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = cq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -97,7 +124,7 @@ func (cq *ClassQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (cq *ClassQuery) FirstIDX(ctx context.Context) int {
+func (cq *ClassQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := cq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -135,8 +162,8 @@ func (cq *ClassQuery) OnlyX(ctx context.Context) *Class {
 // OnlyID is like Only, but returns the only Class ID in the query.
 // Returns a *NotSingularError when exactly one Class ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (cq *ClassQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (cq *ClassQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = cq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -152,7 +179,7 @@ func (cq *ClassQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (cq *ClassQuery) OnlyIDX(ctx context.Context) int {
+func (cq *ClassQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := cq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -178,8 +205,8 @@ func (cq *ClassQuery) AllX(ctx context.Context) []*Class {
 }
 
 // IDs executes the query and returns a list of Class IDs.
-func (cq *ClassQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
+func (cq *ClassQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	var ids []uuid.UUID
 	if err := cq.Select(class.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -187,7 +214,7 @@ func (cq *ClassQuery) IDs(ctx context.Context) ([]int, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (cq *ClassQuery) IDsX(ctx context.Context) []int {
+func (cq *ClassQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := cq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -236,19 +263,44 @@ func (cq *ClassQuery) Clone() *ClassQuery {
 		return nil
 	}
 	return &ClassQuery{
-		config:     cq.config,
-		limit:      cq.limit,
-		offset:     cq.offset,
-		order:      append([]OrderFunc{}, cq.order...),
-		predicates: append([]predicate.Class{}, cq.predicates...),
+		config:      cq.config,
+		limit:       cq.limit,
+		offset:      cq.offset,
+		order:       append([]OrderFunc{}, cq.order...),
+		predicates:  append([]predicate.Class{}, cq.predicates...),
+		withStudent: cq.withStudent.Clone(),
 		// clone intermediate query.
 		sql:  cq.sql.Clone(),
 		path: cq.path,
 	}
 }
 
+// WithStudent tells the query-builder to eager-load the nodes that are connected to
+// the "student" edge. The optional arguments are used to configure the query builder of the edge.
+func (cq *ClassQuery) WithStudent(opts ...func(*StudentQuery)) *ClassQuery {
+	query := &StudentQuery{config: cq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	cq.withStudent = query
+	return cq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Title string `json:"title,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Class.Query().
+//		GroupBy(class.FieldTitle).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (cq *ClassQuery) GroupBy(field string, fields ...string) *ClassGroupBy {
 	group := &ClassGroupBy{config: cq.config}
 	group.fields = append([]string{field}, fields...)
@@ -263,6 +315,17 @@ func (cq *ClassQuery) GroupBy(field string, fields ...string) *ClassGroupBy {
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		Title string `json:"title,omitempty"`
+//	}
+//
+//	client.Class.Query().
+//		Select(class.FieldTitle).
+//		Scan(ctx, &v)
+//
 func (cq *ClassQuery) Select(fields ...string) *ClassSelect {
 	cq.fields = append(cq.fields, fields...)
 	return &ClassSelect{ClassQuery: cq}
@@ -286,8 +349,11 @@ func (cq *ClassQuery) prepareQuery(ctx context.Context) error {
 
 func (cq *ClassQuery) sqlAll(ctx context.Context) ([]*Class, error) {
 	var (
-		nodes = []*Class{}
-		_spec = cq.querySpec()
+		nodes       = []*Class{}
+		_spec       = cq.querySpec()
+		loadedTypes = [1]bool{
+			cq.withStudent != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Class{config: cq.config}
@@ -299,6 +365,7 @@ func (cq *ClassQuery) sqlAll(ctx context.Context) ([]*Class, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, cq.driver, _spec); err != nil {
@@ -307,6 +374,72 @@ func (cq *ClassQuery) sqlAll(ctx context.Context) ([]*Class, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := cq.withStudent; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		ids := make(map[uuid.UUID]*Class, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
+			node.Edges.Student = []*Student{}
+		}
+		var (
+			edgeids []uuid.UUID
+			edges   = make(map[uuid.UUID][]*Class)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: false,
+				Table:   class.StudentTable,
+				Columns: class.StudentPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(class.StudentPrimaryKey[0], fks...))
+			},
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{new(uuid.UUID), new(uuid.UUID)}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*uuid.UUID)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*uuid.UUID)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := *eout
+				inValue := *ein
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				if _, ok := edges[inValue]; !ok {
+					edgeids = append(edgeids, inValue)
+				}
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, cq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "student": %w`, err)
+		}
+		query.Where(student.IDIn(edgeids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := edges[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected "student" node returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Student = append(nodes[i].Edges.Student, n)
+			}
+		}
+	}
+
 	return nodes, nil
 }
 
@@ -329,7 +462,7 @@ func (cq *ClassQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   class.Table,
 			Columns: class.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: class.FieldID,
 			},
 		},
