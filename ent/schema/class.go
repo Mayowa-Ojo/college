@@ -19,7 +19,7 @@ func (Class) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(func() uuid.UUID { return uuid.New() }).Unique().Immutable(),
 		field.String("title").MaxLen(250),
-		field.String("code").MaxLen(8),
+		field.String("code").MaxLen(8).Unique(),
 		field.Int("unit").Max(5).Min(1),
 		field.Enum("semester").GoType(Semester("")),
 		field.String("location").MaxLen(250),

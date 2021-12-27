@@ -12,7 +12,7 @@ var (
 	ClassesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "title", Type: field.TypeString, Size: 250},
-		{Name: "code", Type: field.TypeString, Size: 8},
+		{Name: "code", Type: field.TypeString, Unique: true, Size: 8},
 		{Name: "unit", Type: field.TypeInt},
 		{Name: "semester", Type: field.TypeEnum, Enums: []string{"FIRST", "SECOND"}},
 		{Name: "location", Type: field.TypeString, Size: 250},
