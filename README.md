@@ -1,6 +1,6 @@
 # College
 
-Exploring the [go entity framework](https://github.com/ent/ent) with the gin web framework and some extracts from DDD.
+Exploring [go ent](https://github.com/ent/ent) with the gin web framework and some extracts from DDD.
 
 Ent is a graph-based ORM for [go]() that prioritizes a schema-first approach and enables static typing through code generation. This eliminates the need to have `interface{}`s everywhere due to the drawbacks of the missing piece (generics) in the language.
 
