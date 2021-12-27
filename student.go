@@ -21,15 +21,23 @@ type Student struct {
 	AdmissionNumber string      `json:"admission_number"`
 	Year            int         `json:"year"`
 	Department      *Department `json:"department"`
+	Classes         []*Class    `json:"classes"`
 	CreatedAt       time.Time   `json:"created_at"`
 	UpdatedAt       time.Time   `json:"updated_at"`
 }
 
 func parseToStudent(model *ent.Student) *Student {
 	var d *Department
+	var c []*Class
 
 	if model.Edges.Department != nil {
 		d = parseToDepartment(model.Edges.Department)
+	}
+
+	if len(model.Edges.Classes) >= 1 {
+		for _, v := range model.Edges.Classes {
+			c = append(c, parseToClass(v))
+		}
 	}
 
 	return &Student{
@@ -40,6 +48,7 @@ func parseToStudent(model *ent.Student) *Student {
 		AdmissionNumber: model.AdmissionNumber,
 		Year:            model.Year,
 		Department:      d,
+		Classes:         c,
 		CreatedAt:       model.CreatedAt,
 		UpdatedAt:       model.UpdatedAt,
 	}
@@ -77,8 +86,21 @@ func (d *Datastore) FindListStudents(ctx context.Context, pg *Paginator) ([]*ent
 	return entities, pg, nil
 }
 
+func (d *Datastore) FindStudentByID(ctx context.Context, ID uuid.UUID) (*ent.Student, error) {
+	entity, err := d.c.Student.Query().
+		Where(student.IDEQ(ID)).
+		WithDepartment().
+		WithClasses().
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return entity, nil
+}
+
 func (d *Datastore) FindStudentByEmail(ctx context.Context, email string) (*ent.Student, error) {
-	entity, err := d.c.Student.Query().Where(student.EmailEQ(email)).First(ctx)
+	entity, err := d.c.Student.Query().Where(student.EmailEQ(email)).Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +150,31 @@ func (d *Datastore) UpdateStudentDepartment(ctx context.Context, studentID, depa
 	return entity, nil
 }
 
+func (d *Datastore) UpdateStudentAddClass(ctx context.Context, sID uuid.UUID, class *ent.Class) (*ent.Student, error) {
+	entity, err := d.c.Student.
+		UpdateOneID(sID).
+		AddClasses(class).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	entity, err = d.c.Student.Query().
+		Where(student.IDEQ(entity.ID)).
+		WithDepartment().
+		WithClasses().
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return entity, nil
+}
+
+func (d *Datastore) UpdateStudentRemoveClass(ctx context.Context, sID uuid.UUID, classCode string) (*ent.Student, error) {
+	return nil, nil
+}
+
 func (d *Datastore) DeleteStudent(ctx context.Context, ID uuid.UUID) error {
 	if err := d.c.Student.DeleteOneID(ID).Exec(ctx); err != nil {
 		return err
@@ -141,10 +188,11 @@ Handlers
 */
 type StudentHandler struct {
 	sr StudentRepository
+	cr ClassRepository
 }
 
-func NewStudentHandler(sr StudentRepository) *StudentHandler {
-	return &StudentHandler{sr}
+func NewStudentHandler(sr StudentRepository, cr ClassRepository) *StudentHandler {
+	return &StudentHandler{sr, cr}
 }
 
 func (sh *StudentHandler) GetStudents(ctx context.Context, vm GetStudentsVM) ([]*Student, *Paginator, error) {
@@ -162,6 +210,17 @@ func (sh *StudentHandler) GetStudents(ctx context.Context, vm GetStudentsVM) ([]
 	}
 
 	return students, paginator, nil
+}
+
+func (sh *StudentHandler) GetStudentDetails(ctx context.Context, ID string) (*Student, error) {
+	sID := uuid.MustParse(ID)
+
+	entity, err := sh.sr.FindStudentByID(ctx, sID)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseToStudent(entity), nil
 }
 
 func (sh *StudentHandler) CreateStudent(ctx context.Context, vm CreateStudentVM) (*Student, error) {
@@ -218,6 +277,22 @@ func (sh *StudentHandler) UpdateStudentDepartment(ctx context.Context, vm Update
 	}
 
 	return parseToStudent(entity), nil
+}
+
+func (sh *StudentHandler) ClassRegistration(ctx context.Context, vm ClassRegistrationVM, sID string) (*Student, error) {
+	studentID := uuid.MustParse(sID)
+
+	class, err := sh.cr.FindClassByCode(ctx, vm.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	student, err := sh.sr.UpdateStudentAddClass(ctx, studentID, class)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseToStudent(student), nil
 }
 
 func (sh *StudentHandler) DeleteStudent(ctx context.Context, ID string) error {
