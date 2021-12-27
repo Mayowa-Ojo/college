@@ -2,7 +2,7 @@
 
 Exploring [go ent](https://github.com/ent/ent) with the gin web framework and some extracts from DDD.
 
-Ent is a graph-based ORM for [go]() that prioritizes a schema-first approach and enables static typing through code generation. This eliminates the need to have `interface{}`s everywhere due to the drawbacks of the missing piece (generics) in the language.
+Ent is a graph-based ORM for [go](https://github.com/golang/go) that prioritizes a schema-first approach and enables static typing through code generation. This eliminates the need to have `interface{}`s everywhere due to the drawbacks of the missing piece (generics) in the language.
 
 Comparable to another [ORM (sqlboiler)](https://github.com/volatiletech/sqlboiler) which shares similar ideas, although much more stable and battle-tested. There are some subtle differences:
    - Ent lets you write your schema as normal `go` code rather than `sql`
