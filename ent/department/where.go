@@ -642,6 +642,34 @@ func HasStudentsWith(preds ...predicate.Student) predicate.Department {
 	})
 }
 
+// HasStaffs applies the HasEdge predicate on the "staffs" edge.
+func HasStaffs() predicate.Department {
+	return predicate.Department(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(StaffsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StaffsTable, StaffsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStaffsWith applies the HasEdge predicate on the "staffs" edge with a given conditions (other predicates).
+func HasStaffsWith(preds ...predicate.Staff) predicate.Department {
+	return predicate.Department(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(StaffsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StaffsTable, StaffsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Department) predicate.Department {
 	return predicate.Department(func(s *sql.Selector) {

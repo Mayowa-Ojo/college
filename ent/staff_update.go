@@ -3,14 +3,19 @@
 package ent
 
 import (
+	"college/ent/class"
+	"college/ent/department"
 	"college/ent/predicate"
+	"college/ent/schema"
 	"college/ent/staff"
 	"context"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // StaffUpdate is the builder for updating Staff entities.
@@ -26,9 +31,139 @@ func (su *StaffUpdate) Where(ps ...predicate.Staff) *StaffUpdate {
 	return su
 }
 
+// SetFirstname sets the "firstname" field.
+func (su *StaffUpdate) SetFirstname(s string) *StaffUpdate {
+	su.mutation.SetFirstname(s)
+	return su
+}
+
+// SetLastname sets the "lastname" field.
+func (su *StaffUpdate) SetLastname(s string) *StaffUpdate {
+	su.mutation.SetLastname(s)
+	return su
+}
+
+// SetEmail sets the "email" field.
+func (su *StaffUpdate) SetEmail(s string) *StaffUpdate {
+	su.mutation.SetEmail(s)
+	return su
+}
+
+// SetTelephone sets the "telephone" field.
+func (su *StaffUpdate) SetTelephone(s string) *StaffUpdate {
+	su.mutation.SetTelephone(s)
+	return su
+}
+
+// SetSalary sets the "salary" field.
+func (su *StaffUpdate) SetSalary(i int) *StaffUpdate {
+	su.mutation.ResetSalary()
+	su.mutation.SetSalary(i)
+	return su
+}
+
+// AddSalary adds i to the "salary" field.
+func (su *StaffUpdate) AddSalary(i int) *StaffUpdate {
+	su.mutation.AddSalary(i)
+	return su
+}
+
+// SetRole sets the "role" field.
+func (su *StaffUpdate) SetRole(sr schema.StaffRole) *StaffUpdate {
+	su.mutation.SetRole(sr)
+	return su
+}
+
+// SetRank sets the "rank" field.
+func (su *StaffUpdate) SetRank(sr schema.StaffRank) *StaffUpdate {
+	su.mutation.SetRank(sr)
+	return su
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (su *StaffUpdate) SetCreatedAt(t time.Time) *StaffUpdate {
+	su.mutation.SetCreatedAt(t)
+	return su
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (su *StaffUpdate) SetNillableCreatedAt(t *time.Time) *StaffUpdate {
+	if t != nil {
+		su.SetCreatedAt(*t)
+	}
+	return su
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (su *StaffUpdate) SetUpdatedAt(t time.Time) *StaffUpdate {
+	su.mutation.SetUpdatedAt(t)
+	return su
+}
+
+// SetDepartmentID sets the "department" edge to the Department entity by ID.
+func (su *StaffUpdate) SetDepartmentID(id uuid.UUID) *StaffUpdate {
+	su.mutation.SetDepartmentID(id)
+	return su
+}
+
+// SetNillableDepartmentID sets the "department" edge to the Department entity by ID if the given value is not nil.
+func (su *StaffUpdate) SetNillableDepartmentID(id *uuid.UUID) *StaffUpdate {
+	if id != nil {
+		su = su.SetDepartmentID(*id)
+	}
+	return su
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (su *StaffUpdate) SetDepartment(d *Department) *StaffUpdate {
+	return su.SetDepartmentID(d.ID)
+}
+
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (su *StaffUpdate) AddClassIDs(ids ...uuid.UUID) *StaffUpdate {
+	su.mutation.AddClassIDs(ids...)
+	return su
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (su *StaffUpdate) AddClasses(c ...*Class) *StaffUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return su.AddClassIDs(ids...)
+}
+
 // Mutation returns the StaffMutation object of the builder.
 func (su *StaffUpdate) Mutation() *StaffMutation {
 	return su.mutation
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (su *StaffUpdate) ClearDepartment() *StaffUpdate {
+	su.mutation.ClearDepartment()
+	return su
+}
+
+// ClearClasses clears all "classes" edges to the Class entity.
+func (su *StaffUpdate) ClearClasses() *StaffUpdate {
+	su.mutation.ClearClasses()
+	return su
+}
+
+// RemoveClassIDs removes the "classes" edge to Class entities by IDs.
+func (su *StaffUpdate) RemoveClassIDs(ids ...uuid.UUID) *StaffUpdate {
+	su.mutation.RemoveClassIDs(ids...)
+	return su
+}
+
+// RemoveClasses removes "classes" edges to Class entities.
+func (su *StaffUpdate) RemoveClasses(c ...*Class) *StaffUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return su.RemoveClassIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -37,13 +172,20 @@ func (su *StaffUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	su.defaults()
 	if len(su.hooks) == 0 {
+		if err = su.check(); err != nil {
+			return 0, err
+		}
 		affected, err = su.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*StaffMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = su.check(); err != nil {
+				return 0, err
 			}
 			su.mutation = mutation
 			affected, err = su.sqlSave(ctx)
@@ -85,13 +227,61 @@ func (su *StaffUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (su *StaffUpdate) defaults() {
+	if _, ok := su.mutation.UpdatedAt(); !ok {
+		v := staff.UpdateDefaultUpdatedAt()
+		su.mutation.SetUpdatedAt(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (su *StaffUpdate) check() error {
+	if v, ok := su.mutation.Firstname(); ok {
+		if err := staff.FirstnameValidator(v); err != nil {
+			return &ValidationError{Name: "firstname", err: fmt.Errorf("ent: validator failed for field \"firstname\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.Lastname(); ok {
+		if err := staff.LastnameValidator(v); err != nil {
+			return &ValidationError{Name: "lastname", err: fmt.Errorf("ent: validator failed for field \"lastname\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.Email(); ok {
+		if err := staff.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf("ent: validator failed for field \"email\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.Telephone(); ok {
+		if err := staff.TelephoneValidator(v); err != nil {
+			return &ValidationError{Name: "telephone", err: fmt.Errorf("ent: validator failed for field \"telephone\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.Salary(); ok {
+		if err := staff.SalaryValidator(v); err != nil {
+			return &ValidationError{Name: "salary", err: fmt.Errorf("ent: validator failed for field \"salary\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.Role(); ok {
+		if err := staff.RoleValidator(v); err != nil {
+			return &ValidationError{Name: "role", err: fmt.Errorf("ent: validator failed for field \"role\": %w", err)}
+		}
+	}
+	if v, ok := su.mutation.Rank(); ok {
+		if err := staff.RankValidator(v); err != nil {
+			return &ValidationError{Name: "rank", err: fmt.Errorf("ent: validator failed for field \"rank\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (su *StaffUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   staff.Table,
 			Columns: staff.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: staff.FieldID,
 			},
 		},
@@ -102,6 +292,165 @@ func (su *StaffUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := su.mutation.Firstname(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldFirstname,
+		})
+	}
+	if value, ok := su.mutation.Lastname(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldLastname,
+		})
+	}
+	if value, ok := su.mutation.Email(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldEmail,
+		})
+	}
+	if value, ok := su.mutation.Telephone(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldTelephone,
+		})
+	}
+	if value, ok := su.mutation.Salary(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: staff.FieldSalary,
+		})
+	}
+	if value, ok := su.mutation.AddedSalary(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: staff.FieldSalary,
+		})
+	}
+	if value, ok := su.mutation.Role(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: staff.FieldRole,
+		})
+	}
+	if value, ok := su.mutation.Rank(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: staff.FieldRank,
+		})
+	}
+	if value, ok := su.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: staff.FieldCreatedAt,
+		})
+	}
+	if value, ok := su.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: staff.FieldUpdatedAt,
+		})
+	}
+	if su.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   staff.DepartmentTable,
+			Columns: []string{staff.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   staff.DepartmentTable,
+			Columns: []string{staff.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if su.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   staff.ClassesTable,
+			Columns: staff.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.RemovedClassesIDs(); len(nodes) > 0 && !su.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   staff.ClassesTable,
+			Columns: staff.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := su.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   staff.ClassesTable,
+			Columns: staff.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -122,9 +471,139 @@ type StaffUpdateOne struct {
 	mutation *StaffMutation
 }
 
+// SetFirstname sets the "firstname" field.
+func (suo *StaffUpdateOne) SetFirstname(s string) *StaffUpdateOne {
+	suo.mutation.SetFirstname(s)
+	return suo
+}
+
+// SetLastname sets the "lastname" field.
+func (suo *StaffUpdateOne) SetLastname(s string) *StaffUpdateOne {
+	suo.mutation.SetLastname(s)
+	return suo
+}
+
+// SetEmail sets the "email" field.
+func (suo *StaffUpdateOne) SetEmail(s string) *StaffUpdateOne {
+	suo.mutation.SetEmail(s)
+	return suo
+}
+
+// SetTelephone sets the "telephone" field.
+func (suo *StaffUpdateOne) SetTelephone(s string) *StaffUpdateOne {
+	suo.mutation.SetTelephone(s)
+	return suo
+}
+
+// SetSalary sets the "salary" field.
+func (suo *StaffUpdateOne) SetSalary(i int) *StaffUpdateOne {
+	suo.mutation.ResetSalary()
+	suo.mutation.SetSalary(i)
+	return suo
+}
+
+// AddSalary adds i to the "salary" field.
+func (suo *StaffUpdateOne) AddSalary(i int) *StaffUpdateOne {
+	suo.mutation.AddSalary(i)
+	return suo
+}
+
+// SetRole sets the "role" field.
+func (suo *StaffUpdateOne) SetRole(sr schema.StaffRole) *StaffUpdateOne {
+	suo.mutation.SetRole(sr)
+	return suo
+}
+
+// SetRank sets the "rank" field.
+func (suo *StaffUpdateOne) SetRank(sr schema.StaffRank) *StaffUpdateOne {
+	suo.mutation.SetRank(sr)
+	return suo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (suo *StaffUpdateOne) SetCreatedAt(t time.Time) *StaffUpdateOne {
+	suo.mutation.SetCreatedAt(t)
+	return suo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (suo *StaffUpdateOne) SetNillableCreatedAt(t *time.Time) *StaffUpdateOne {
+	if t != nil {
+		suo.SetCreatedAt(*t)
+	}
+	return suo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (suo *StaffUpdateOne) SetUpdatedAt(t time.Time) *StaffUpdateOne {
+	suo.mutation.SetUpdatedAt(t)
+	return suo
+}
+
+// SetDepartmentID sets the "department" edge to the Department entity by ID.
+func (suo *StaffUpdateOne) SetDepartmentID(id uuid.UUID) *StaffUpdateOne {
+	suo.mutation.SetDepartmentID(id)
+	return suo
+}
+
+// SetNillableDepartmentID sets the "department" edge to the Department entity by ID if the given value is not nil.
+func (suo *StaffUpdateOne) SetNillableDepartmentID(id *uuid.UUID) *StaffUpdateOne {
+	if id != nil {
+		suo = suo.SetDepartmentID(*id)
+	}
+	return suo
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (suo *StaffUpdateOne) SetDepartment(d *Department) *StaffUpdateOne {
+	return suo.SetDepartmentID(d.ID)
+}
+
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (suo *StaffUpdateOne) AddClassIDs(ids ...uuid.UUID) *StaffUpdateOne {
+	suo.mutation.AddClassIDs(ids...)
+	return suo
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (suo *StaffUpdateOne) AddClasses(c ...*Class) *StaffUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return suo.AddClassIDs(ids...)
+}
+
 // Mutation returns the StaffMutation object of the builder.
 func (suo *StaffUpdateOne) Mutation() *StaffMutation {
 	return suo.mutation
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (suo *StaffUpdateOne) ClearDepartment() *StaffUpdateOne {
+	suo.mutation.ClearDepartment()
+	return suo
+}
+
+// ClearClasses clears all "classes" edges to the Class entity.
+func (suo *StaffUpdateOne) ClearClasses() *StaffUpdateOne {
+	suo.mutation.ClearClasses()
+	return suo
+}
+
+// RemoveClassIDs removes the "classes" edge to Class entities by IDs.
+func (suo *StaffUpdateOne) RemoveClassIDs(ids ...uuid.UUID) *StaffUpdateOne {
+	suo.mutation.RemoveClassIDs(ids...)
+	return suo
+}
+
+// RemoveClasses removes "classes" edges to Class entities.
+func (suo *StaffUpdateOne) RemoveClasses(c ...*Class) *StaffUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return suo.RemoveClassIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -140,13 +619,20 @@ func (suo *StaffUpdateOne) Save(ctx context.Context) (*Staff, error) {
 		err  error
 		node *Staff
 	)
+	suo.defaults()
 	if len(suo.hooks) == 0 {
+		if err = suo.check(); err != nil {
+			return nil, err
+		}
 		node, err = suo.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*StaffMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = suo.check(); err != nil {
+				return nil, err
 			}
 			suo.mutation = mutation
 			node, err = suo.sqlSave(ctx)
@@ -188,13 +674,61 @@ func (suo *StaffUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (suo *StaffUpdateOne) defaults() {
+	if _, ok := suo.mutation.UpdatedAt(); !ok {
+		v := staff.UpdateDefaultUpdatedAt()
+		suo.mutation.SetUpdatedAt(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (suo *StaffUpdateOne) check() error {
+	if v, ok := suo.mutation.Firstname(); ok {
+		if err := staff.FirstnameValidator(v); err != nil {
+			return &ValidationError{Name: "firstname", err: fmt.Errorf("ent: validator failed for field \"firstname\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.Lastname(); ok {
+		if err := staff.LastnameValidator(v); err != nil {
+			return &ValidationError{Name: "lastname", err: fmt.Errorf("ent: validator failed for field \"lastname\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.Email(); ok {
+		if err := staff.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf("ent: validator failed for field \"email\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.Telephone(); ok {
+		if err := staff.TelephoneValidator(v); err != nil {
+			return &ValidationError{Name: "telephone", err: fmt.Errorf("ent: validator failed for field \"telephone\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.Salary(); ok {
+		if err := staff.SalaryValidator(v); err != nil {
+			return &ValidationError{Name: "salary", err: fmt.Errorf("ent: validator failed for field \"salary\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.Role(); ok {
+		if err := staff.RoleValidator(v); err != nil {
+			return &ValidationError{Name: "role", err: fmt.Errorf("ent: validator failed for field \"role\": %w", err)}
+		}
+	}
+	if v, ok := suo.mutation.Rank(); ok {
+		if err := staff.RankValidator(v); err != nil {
+			return &ValidationError{Name: "rank", err: fmt.Errorf("ent: validator failed for field \"rank\": %w", err)}
+		}
+	}
+	return nil
+}
+
 func (suo *StaffUpdateOne) sqlSave(ctx context.Context) (_node *Staff, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
 			Table:   staff.Table,
 			Columns: staff.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: staff.FieldID,
 			},
 		},
@@ -222,6 +756,165 @@ func (suo *StaffUpdateOne) sqlSave(ctx context.Context) (_node *Staff, err error
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := suo.mutation.Firstname(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldFirstname,
+		})
+	}
+	if value, ok := suo.mutation.Lastname(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldLastname,
+		})
+	}
+	if value, ok := suo.mutation.Email(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldEmail,
+		})
+	}
+	if value, ok := suo.mutation.Telephone(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldTelephone,
+		})
+	}
+	if value, ok := suo.mutation.Salary(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: staff.FieldSalary,
+		})
+	}
+	if value, ok := suo.mutation.AddedSalary(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: staff.FieldSalary,
+		})
+	}
+	if value, ok := suo.mutation.Role(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: staff.FieldRole,
+		})
+	}
+	if value, ok := suo.mutation.Rank(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: staff.FieldRank,
+		})
+	}
+	if value, ok := suo.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: staff.FieldCreatedAt,
+		})
+	}
+	if value, ok := suo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: staff.FieldUpdatedAt,
+		})
+	}
+	if suo.mutation.DepartmentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   staff.DepartmentTable,
+			Columns: []string{staff.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   staff.DepartmentTable,
+			Columns: []string{staff.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suo.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   staff.ClassesTable,
+			Columns: staff.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.RemovedClassesIDs(); len(nodes) > 0 && !suo.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   staff.ClassesTable,
+			Columns: staff.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suo.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   staff.ClassesTable,
+			Columns: staff.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Staff{config: suo.config}
 	_spec.Assign = _node.assignValues

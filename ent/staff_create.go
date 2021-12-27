@@ -3,12 +3,18 @@
 package ent
 
 import (
+	"college/ent/class"
+	"college/ent/department"
+	"college/ent/schema"
 	"college/ent/staff"
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // StaffCreate is the builder for creating a Staff entity.
@@ -16,6 +22,116 @@ type StaffCreate struct {
 	config
 	mutation *StaffMutation
 	hooks    []Hook
+}
+
+// SetFirstname sets the "firstname" field.
+func (sc *StaffCreate) SetFirstname(s string) *StaffCreate {
+	sc.mutation.SetFirstname(s)
+	return sc
+}
+
+// SetLastname sets the "lastname" field.
+func (sc *StaffCreate) SetLastname(s string) *StaffCreate {
+	sc.mutation.SetLastname(s)
+	return sc
+}
+
+// SetEmail sets the "email" field.
+func (sc *StaffCreate) SetEmail(s string) *StaffCreate {
+	sc.mutation.SetEmail(s)
+	return sc
+}
+
+// SetTelephone sets the "telephone" field.
+func (sc *StaffCreate) SetTelephone(s string) *StaffCreate {
+	sc.mutation.SetTelephone(s)
+	return sc
+}
+
+// SetSalary sets the "salary" field.
+func (sc *StaffCreate) SetSalary(i int) *StaffCreate {
+	sc.mutation.SetSalary(i)
+	return sc
+}
+
+// SetRole sets the "role" field.
+func (sc *StaffCreate) SetRole(sr schema.StaffRole) *StaffCreate {
+	sc.mutation.SetRole(sr)
+	return sc
+}
+
+// SetRank sets the "rank" field.
+func (sc *StaffCreate) SetRank(sr schema.StaffRank) *StaffCreate {
+	sc.mutation.SetRank(sr)
+	return sc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (sc *StaffCreate) SetCreatedAt(t time.Time) *StaffCreate {
+	sc.mutation.SetCreatedAt(t)
+	return sc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (sc *StaffCreate) SetNillableCreatedAt(t *time.Time) *StaffCreate {
+	if t != nil {
+		sc.SetCreatedAt(*t)
+	}
+	return sc
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (sc *StaffCreate) SetUpdatedAt(t time.Time) *StaffCreate {
+	sc.mutation.SetUpdatedAt(t)
+	return sc
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (sc *StaffCreate) SetNillableUpdatedAt(t *time.Time) *StaffCreate {
+	if t != nil {
+		sc.SetUpdatedAt(*t)
+	}
+	return sc
+}
+
+// SetID sets the "id" field.
+func (sc *StaffCreate) SetID(u uuid.UUID) *StaffCreate {
+	sc.mutation.SetID(u)
+	return sc
+}
+
+// SetDepartmentID sets the "department" edge to the Department entity by ID.
+func (sc *StaffCreate) SetDepartmentID(id uuid.UUID) *StaffCreate {
+	sc.mutation.SetDepartmentID(id)
+	return sc
+}
+
+// SetNillableDepartmentID sets the "department" edge to the Department entity by ID if the given value is not nil.
+func (sc *StaffCreate) SetNillableDepartmentID(id *uuid.UUID) *StaffCreate {
+	if id != nil {
+		sc = sc.SetDepartmentID(*id)
+	}
+	return sc
+}
+
+// SetDepartment sets the "department" edge to the Department entity.
+func (sc *StaffCreate) SetDepartment(d *Department) *StaffCreate {
+	return sc.SetDepartmentID(d.ID)
+}
+
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (sc *StaffCreate) AddClassIDs(ids ...uuid.UUID) *StaffCreate {
+	sc.mutation.AddClassIDs(ids...)
+	return sc
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (sc *StaffCreate) AddClasses(c ...*Class) *StaffCreate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return sc.AddClassIDs(ids...)
 }
 
 // Mutation returns the StaffMutation object of the builder.
@@ -29,6 +145,7 @@ func (sc *StaffCreate) Save(ctx context.Context) (*Staff, error) {
 		err  error
 		node *Staff
 	)
+	sc.defaults()
 	if len(sc.hooks) == 0 {
 		if err = sc.check(); err != nil {
 			return nil, err
@@ -86,8 +203,86 @@ func (sc *StaffCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (sc *StaffCreate) defaults() {
+	if _, ok := sc.mutation.CreatedAt(); !ok {
+		v := staff.DefaultCreatedAt()
+		sc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := sc.mutation.UpdatedAt(); !ok {
+		v := staff.DefaultUpdatedAt()
+		sc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := sc.mutation.ID(); !ok {
+		v := staff.DefaultID()
+		sc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (sc *StaffCreate) check() error {
+	if _, ok := sc.mutation.Firstname(); !ok {
+		return &ValidationError{Name: "firstname", err: errors.New(`ent: missing required field "firstname"`)}
+	}
+	if v, ok := sc.mutation.Firstname(); ok {
+		if err := staff.FirstnameValidator(v); err != nil {
+			return &ValidationError{Name: "firstname", err: fmt.Errorf(`ent: validator failed for field "firstname": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.Lastname(); !ok {
+		return &ValidationError{Name: "lastname", err: errors.New(`ent: missing required field "lastname"`)}
+	}
+	if v, ok := sc.mutation.Lastname(); ok {
+		if err := staff.LastnameValidator(v); err != nil {
+			return &ValidationError{Name: "lastname", err: fmt.Errorf(`ent: validator failed for field "lastname": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.Email(); !ok {
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "email"`)}
+	}
+	if v, ok := sc.mutation.Email(); ok {
+		if err := staff.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "email": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.Telephone(); !ok {
+		return &ValidationError{Name: "telephone", err: errors.New(`ent: missing required field "telephone"`)}
+	}
+	if v, ok := sc.mutation.Telephone(); ok {
+		if err := staff.TelephoneValidator(v); err != nil {
+			return &ValidationError{Name: "telephone", err: fmt.Errorf(`ent: validator failed for field "telephone": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.Salary(); !ok {
+		return &ValidationError{Name: "salary", err: errors.New(`ent: missing required field "salary"`)}
+	}
+	if v, ok := sc.mutation.Salary(); ok {
+		if err := staff.SalaryValidator(v); err != nil {
+			return &ValidationError{Name: "salary", err: fmt.Errorf(`ent: validator failed for field "salary": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.Role(); !ok {
+		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "role"`)}
+	}
+	if v, ok := sc.mutation.Role(); ok {
+		if err := staff.RoleValidator(v); err != nil {
+			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "role": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.Rank(); !ok {
+		return &ValidationError{Name: "rank", err: errors.New(`ent: missing required field "rank"`)}
+	}
+	if v, ok := sc.mutation.Rank(); ok {
+		if err := staff.RankValidator(v); err != nil {
+			return &ValidationError{Name: "rank", err: fmt.Errorf(`ent: validator failed for field "rank": %w`, err)}
+		}
+	}
+	if _, ok := sc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "created_at"`)}
+	}
+	if _, ok := sc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "updated_at"`)}
+	}
 	return nil
 }
 
@@ -99,8 +294,9 @@ func (sc *StaffCreate) sqlSave(ctx context.Context) (*Staff, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(uuid.UUID)
+	}
 	return _node, nil
 }
 
@@ -110,11 +306,126 @@ func (sc *StaffCreate) createSpec() (*Staff, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: staff.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: staff.FieldID,
 			},
 		}
 	)
+	if id, ok := sc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
+	if value, ok := sc.mutation.Firstname(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldFirstname,
+		})
+		_node.Firstname = value
+	}
+	if value, ok := sc.mutation.Lastname(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldLastname,
+		})
+		_node.Lastname = value
+	}
+	if value, ok := sc.mutation.Email(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldEmail,
+		})
+		_node.Email = value
+	}
+	if value, ok := sc.mutation.Telephone(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: staff.FieldTelephone,
+		})
+		_node.Telephone = value
+	}
+	if value, ok := sc.mutation.Salary(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: staff.FieldSalary,
+		})
+		_node.Salary = value
+	}
+	if value, ok := sc.mutation.Role(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: staff.FieldRole,
+		})
+		_node.Role = value
+	}
+	if value, ok := sc.mutation.Rank(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Value:  value,
+			Column: staff.FieldRank,
+		})
+		_node.Rank = value
+	}
+	if value, ok := sc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: staff.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
+	if value, ok := sc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: staff.FieldUpdatedAt,
+		})
+		_node.UpdatedAt = value
+	}
+	if nodes := sc.mutation.DepartmentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   staff.DepartmentTable,
+			Columns: []string{staff.DepartmentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: department.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.department_id = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := sc.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   staff.ClassesTable,
+			Columns: staff.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: class.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -132,6 +443,7 @@ func (scb *StaffCreateBulk) Save(ctx context.Context) ([]*Staff, error) {
 	for i := range scb.builders {
 		func(i int, root context.Context) {
 			builder := scb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*StaffMutation)
 				if !ok {
@@ -159,10 +471,6 @@ func (scb *StaffCreateBulk) Save(ctx context.Context) ([]*Staff, error) {
 				}
 				mutation.id = &nodes[i].ID
 				mutation.done = true
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

@@ -42,13 +42,31 @@ var (
 	}
 	// StaffsColumns holds the columns for the "staffs" table.
 	StaffsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "firstname", Type: field.TypeString, Size: 250},
+		{Name: "lastname", Type: field.TypeString, Size: 250},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "telephone", Type: field.TypeString, Size: 15},
+		{Name: "salary", Type: field.TypeInt},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"Academic-Staff", "Non-Academic-Staff"}},
+		{Name: "rank", Type: field.TypeEnum, Enums: []string{"Lecturer-I", "Lecturer-II", "Senior-Lecturer-I", "Senior-Lecturer-II", "Principal-Lecturer", "HOD"}},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "department_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// StaffsTable holds the schema information for the "staffs" table.
 	StaffsTable = &schema.Table{
 		Name:       "staffs",
 		Columns:    StaffsColumns,
 		PrimaryKey: []*schema.Column{StaffsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "staffs_departments_staffs",
+				Columns:    []*schema.Column{StaffsColumns[10]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// StudentsColumns holds the columns for the "students" table.
 	StudentsColumns = []*schema.Column{
@@ -102,6 +120,31 @@ var (
 			},
 		},
 	}
+	// ClassInstructorColumns holds the columns for the "class_instructor" table.
+	ClassInstructorColumns = []*schema.Column{
+		{Name: "class_id", Type: field.TypeUUID},
+		{Name: "instructor_id", Type: field.TypeUUID},
+	}
+	// ClassInstructorTable holds the schema information for the "class_instructor" table.
+	ClassInstructorTable = &schema.Table{
+		Name:       "class_instructor",
+		Columns:    ClassInstructorColumns,
+		PrimaryKey: []*schema.Column{ClassInstructorColumns[0], ClassInstructorColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "class_instructor_class_id",
+				Columns:    []*schema.Column{ClassInstructorColumns[0]},
+				RefColumns: []*schema.Column{ClassesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "class_instructor_instructor_id",
+				Columns:    []*schema.Column{ClassInstructorColumns[1]},
+				RefColumns: []*schema.Column{StaffsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ClassesTable,
@@ -109,11 +152,15 @@ var (
 		StaffsTable,
 		StudentsTable,
 		ClassStudentTable,
+		ClassInstructorTable,
 	}
 )
 
 func init() {
+	StaffsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	StudentsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	ClassStudentTable.ForeignKeys[0].RefTable = ClassesTable
 	ClassStudentTable.ForeignKeys[1].RefTable = StudentsTable
+	ClassInstructorTable.ForeignKeys[0].RefTable = ClassesTable
+	ClassInstructorTable.ForeignKeys[1].RefTable = StaffsTable
 }

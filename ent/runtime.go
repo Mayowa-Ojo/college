@@ -6,6 +6,7 @@ import (
 	"college/ent/class"
 	"college/ent/department"
 	"college/ent/schema"
+	"college/ent/staff"
 	"college/ent/student"
 	"time"
 
@@ -90,6 +91,42 @@ func init() {
 	departmentDescID := departmentFields[0].Descriptor()
 	// department.DefaultID holds the default value on creation for the id field.
 	department.DefaultID = departmentDescID.Default.(func() uuid.UUID)
+	staffFields := schema.Staff{}.Fields()
+	_ = staffFields
+	// staffDescFirstname is the schema descriptor for firstname field.
+	staffDescFirstname := staffFields[1].Descriptor()
+	// staff.FirstnameValidator is a validator for the "firstname" field. It is called by the builders before save.
+	staff.FirstnameValidator = staffDescFirstname.Validators[0].(func(string) error)
+	// staffDescLastname is the schema descriptor for lastname field.
+	staffDescLastname := staffFields[2].Descriptor()
+	// staff.LastnameValidator is a validator for the "lastname" field. It is called by the builders before save.
+	staff.LastnameValidator = staffDescLastname.Validators[0].(func(string) error)
+	// staffDescEmail is the schema descriptor for email field.
+	staffDescEmail := staffFields[3].Descriptor()
+	// staff.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	staff.EmailValidator = staffDescEmail.Validators[0].(func(string) error)
+	// staffDescTelephone is the schema descriptor for telephone field.
+	staffDescTelephone := staffFields[4].Descriptor()
+	// staff.TelephoneValidator is a validator for the "telephone" field. It is called by the builders before save.
+	staff.TelephoneValidator = staffDescTelephone.Validators[0].(func(string) error)
+	// staffDescSalary is the schema descriptor for salary field.
+	staffDescSalary := staffFields[5].Descriptor()
+	// staff.SalaryValidator is a validator for the "salary" field. It is called by the builders before save.
+	staff.SalaryValidator = staffDescSalary.Validators[0].(func(int) error)
+	// staffDescCreatedAt is the schema descriptor for created_at field.
+	staffDescCreatedAt := staffFields[8].Descriptor()
+	// staff.DefaultCreatedAt holds the default value on creation for the created_at field.
+	staff.DefaultCreatedAt = staffDescCreatedAt.Default.(func() time.Time)
+	// staffDescUpdatedAt is the schema descriptor for updated_at field.
+	staffDescUpdatedAt := staffFields[9].Descriptor()
+	// staff.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	staff.DefaultUpdatedAt = staffDescUpdatedAt.Default.(func() time.Time)
+	// staff.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	staff.UpdateDefaultUpdatedAt = staffDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// staffDescID is the schema descriptor for id field.
+	staffDescID := staffFields[0].Descriptor()
+	// staff.DefaultID holds the default value on creation for the id field.
+	staff.DefaultID = staffDescID.Default.(func() uuid.UUID)
 	studentFields := schema.Student{}.Fields()
 	_ = studentFields
 	// studentDescFirstname is the schema descriptor for firstname field.

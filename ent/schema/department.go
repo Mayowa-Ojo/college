@@ -30,5 +30,8 @@ func (Department) Fields() []ent.Field {
 func (Department) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("students", Student.Type),
+		edge.To("staffs", Staff.Type).
+			// set the column name in staffs table
+			StorageKey(edge.Column("department_id")),
 	}
 }

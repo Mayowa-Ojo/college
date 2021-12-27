@@ -41,9 +41,11 @@ type Class struct {
 type ClassEdges struct {
 	// Student holds the value of the student edge.
 	Student []*Student `json:"student,omitempty"`
+	// Instructors holds the value of the instructors edge.
+	Instructors []*Staff `json:"instructors,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // StudentOrErr returns the Student value or an error if the edge
@@ -53,6 +55,15 @@ func (e ClassEdges) StudentOrErr() ([]*Student, error) {
 		return e.Student, nil
 	}
 	return nil, &NotLoadedError{edge: "student"}
+}
+
+// InstructorsOrErr returns the Instructors value or an error if the edge
+// was not loaded in eager-loading.
+func (e ClassEdges) InstructorsOrErr() ([]*Staff, error) {
+	if e.loadedTypes[1] {
+		return e.Instructors, nil
+	}
+	return nil, &NotLoadedError{edge: "instructors"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -139,6 +150,11 @@ func (c *Class) assignValues(columns []string, values []interface{}) error {
 // QueryStudent queries the "student" edge of the Class entity.
 func (c *Class) QueryStudent() *StudentQuery {
 	return (&ClassClient{config: c.config}).QueryStudent(c)
+}
+
+// QueryInstructors queries the "instructors" edge of the Class entity.
+func (c *Class) QueryInstructors() *StaffQuery {
+	return (&ClassClient{config: c.config}).QueryInstructors(c)
 }
 
 // Update returns a builder for updating this Class.

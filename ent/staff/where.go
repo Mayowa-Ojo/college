@@ -4,33 +4,37 @@ package staff
 
 import (
 	"college/ent/predicate"
+	"college/ent/schema"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Staff {
+func ID(id uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Staff {
+func IDEQ(id uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Staff {
+func IDNEQ(id uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
 	})
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Staff {
+func IDIn(ids ...uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -47,7 +51,7 @@ func IDIn(ids ...int) predicate.Staff {
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Staff {
+func IDNotIn(ids ...uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -64,30 +68,907 @@ func IDNotIn(ids ...int) predicate.Staff {
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Staff {
+func IDGT(id uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
 	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Staff {
+func IDGTE(id uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
 	})
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Staff {
+func IDLT(id uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
 	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Staff {
+func IDLTE(id uuid.UUID) predicate.Staff {
 	return predicate.Staff(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
+	})
+}
+
+// Firstname applies equality check predicate on the "firstname" field. It's identical to FirstnameEQ.
+func Firstname(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldFirstname), v))
+	})
+}
+
+// Lastname applies equality check predicate on the "lastname" field. It's identical to LastnameEQ.
+func Lastname(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldLastname), v))
+	})
+}
+
+// Email applies equality check predicate on the "email" field. It's identical to EmailEQ.
+func Email(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldEmail), v))
+	})
+}
+
+// Telephone applies equality check predicate on the "telephone" field. It's identical to TelephoneEQ.
+func Telephone(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTelephone), v))
+	})
+}
+
+// Salary applies equality check predicate on the "salary" field. It's identical to SalaryEQ.
+func Salary(v int) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSalary), v))
+	})
+}
+
+// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
+func CreatedAt(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
+func UpdatedAt(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// FirstnameEQ applies the EQ predicate on the "firstname" field.
+func FirstnameEQ(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameNEQ applies the NEQ predicate on the "firstname" field.
+func FirstnameNEQ(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameIn applies the In predicate on the "firstname" field.
+func FirstnameIn(vs ...string) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldFirstname), v...))
+	})
+}
+
+// FirstnameNotIn applies the NotIn predicate on the "firstname" field.
+func FirstnameNotIn(vs ...string) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldFirstname), v...))
+	})
+}
+
+// FirstnameGT applies the GT predicate on the "firstname" field.
+func FirstnameGT(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameGTE applies the GTE predicate on the "firstname" field.
+func FirstnameGTE(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameLT applies the LT predicate on the "firstname" field.
+func FirstnameLT(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameLTE applies the LTE predicate on the "firstname" field.
+func FirstnameLTE(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameContains applies the Contains predicate on the "firstname" field.
+func FirstnameContains(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameHasPrefix applies the HasPrefix predicate on the "firstname" field.
+func FirstnameHasPrefix(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameHasSuffix applies the HasSuffix predicate on the "firstname" field.
+func FirstnameHasSuffix(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameEqualFold applies the EqualFold predicate on the "firstname" field.
+func FirstnameEqualFold(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldFirstname), v))
+	})
+}
+
+// FirstnameContainsFold applies the ContainsFold predicate on the "firstname" field.
+func FirstnameContainsFold(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldFirstname), v))
+	})
+}
+
+// LastnameEQ applies the EQ predicate on the "lastname" field.
+func LastnameEQ(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameNEQ applies the NEQ predicate on the "lastname" field.
+func LastnameNEQ(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameIn applies the In predicate on the "lastname" field.
+func LastnameIn(vs ...string) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldLastname), v...))
+	})
+}
+
+// LastnameNotIn applies the NotIn predicate on the "lastname" field.
+func LastnameNotIn(vs ...string) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldLastname), v...))
+	})
+}
+
+// LastnameGT applies the GT predicate on the "lastname" field.
+func LastnameGT(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameGTE applies the GTE predicate on the "lastname" field.
+func LastnameGTE(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameLT applies the LT predicate on the "lastname" field.
+func LastnameLT(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameLTE applies the LTE predicate on the "lastname" field.
+func LastnameLTE(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameContains applies the Contains predicate on the "lastname" field.
+func LastnameContains(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameHasPrefix applies the HasPrefix predicate on the "lastname" field.
+func LastnameHasPrefix(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameHasSuffix applies the HasSuffix predicate on the "lastname" field.
+func LastnameHasSuffix(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameEqualFold applies the EqualFold predicate on the "lastname" field.
+func LastnameEqualFold(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldLastname), v))
+	})
+}
+
+// LastnameContainsFold applies the ContainsFold predicate on the "lastname" field.
+func LastnameContainsFold(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldLastname), v))
+	})
+}
+
+// EmailEQ applies the EQ predicate on the "email" field.
+func EmailEQ(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldEmail), v))
+	})
+}
+
+// EmailNEQ applies the NEQ predicate on the "email" field.
+func EmailNEQ(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldEmail), v))
+	})
+}
+
+// EmailIn applies the In predicate on the "email" field.
+func EmailIn(vs ...string) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldEmail), v...))
+	})
+}
+
+// EmailNotIn applies the NotIn predicate on the "email" field.
+func EmailNotIn(vs ...string) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldEmail), v...))
+	})
+}
+
+// EmailGT applies the GT predicate on the "email" field.
+func EmailGT(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldEmail), v))
+	})
+}
+
+// EmailGTE applies the GTE predicate on the "email" field.
+func EmailGTE(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldEmail), v))
+	})
+}
+
+// EmailLT applies the LT predicate on the "email" field.
+func EmailLT(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldEmail), v))
+	})
+}
+
+// EmailLTE applies the LTE predicate on the "email" field.
+func EmailLTE(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldEmail), v))
+	})
+}
+
+// EmailContains applies the Contains predicate on the "email" field.
+func EmailContains(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldEmail), v))
+	})
+}
+
+// EmailHasPrefix applies the HasPrefix predicate on the "email" field.
+func EmailHasPrefix(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldEmail), v))
+	})
+}
+
+// EmailHasSuffix applies the HasSuffix predicate on the "email" field.
+func EmailHasSuffix(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldEmail), v))
+	})
+}
+
+// EmailEqualFold applies the EqualFold predicate on the "email" field.
+func EmailEqualFold(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldEmail), v))
+	})
+}
+
+// EmailContainsFold applies the ContainsFold predicate on the "email" field.
+func EmailContainsFold(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldEmail), v))
+	})
+}
+
+// TelephoneEQ applies the EQ predicate on the "telephone" field.
+func TelephoneEQ(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneNEQ applies the NEQ predicate on the "telephone" field.
+func TelephoneNEQ(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneIn applies the In predicate on the "telephone" field.
+func TelephoneIn(vs ...string) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldTelephone), v...))
+	})
+}
+
+// TelephoneNotIn applies the NotIn predicate on the "telephone" field.
+func TelephoneNotIn(vs ...string) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldTelephone), v...))
+	})
+}
+
+// TelephoneGT applies the GT predicate on the "telephone" field.
+func TelephoneGT(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneGTE applies the GTE predicate on the "telephone" field.
+func TelephoneGTE(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneLT applies the LT predicate on the "telephone" field.
+func TelephoneLT(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneLTE applies the LTE predicate on the "telephone" field.
+func TelephoneLTE(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneContains applies the Contains predicate on the "telephone" field.
+func TelephoneContains(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneHasPrefix applies the HasPrefix predicate on the "telephone" field.
+func TelephoneHasPrefix(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneHasSuffix applies the HasSuffix predicate on the "telephone" field.
+func TelephoneHasSuffix(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneEqualFold applies the EqualFold predicate on the "telephone" field.
+func TelephoneEqualFold(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldTelephone), v))
+	})
+}
+
+// TelephoneContainsFold applies the ContainsFold predicate on the "telephone" field.
+func TelephoneContainsFold(v string) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldTelephone), v))
+	})
+}
+
+// SalaryEQ applies the EQ predicate on the "salary" field.
+func SalaryEQ(v int) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSalary), v))
+	})
+}
+
+// SalaryNEQ applies the NEQ predicate on the "salary" field.
+func SalaryNEQ(v int) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSalary), v))
+	})
+}
+
+// SalaryIn applies the In predicate on the "salary" field.
+func SalaryIn(vs ...int) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldSalary), v...))
+	})
+}
+
+// SalaryNotIn applies the NotIn predicate on the "salary" field.
+func SalaryNotIn(vs ...int) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldSalary), v...))
+	})
+}
+
+// SalaryGT applies the GT predicate on the "salary" field.
+func SalaryGT(v int) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldSalary), v))
+	})
+}
+
+// SalaryGTE applies the GTE predicate on the "salary" field.
+func SalaryGTE(v int) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldSalary), v))
+	})
+}
+
+// SalaryLT applies the LT predicate on the "salary" field.
+func SalaryLT(v int) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldSalary), v))
+	})
+}
+
+// SalaryLTE applies the LTE predicate on the "salary" field.
+func SalaryLTE(v int) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldSalary), v))
+	})
+}
+
+// RoleEQ applies the EQ predicate on the "role" field.
+func RoleEQ(v schema.StaffRole) predicate.Staff {
+	vc := v
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldRole), vc))
+	})
+}
+
+// RoleNEQ applies the NEQ predicate on the "role" field.
+func RoleNEQ(v schema.StaffRole) predicate.Staff {
+	vc := v
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldRole), vc))
+	})
+}
+
+// RoleIn applies the In predicate on the "role" field.
+func RoleIn(vs ...schema.StaffRole) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldRole), v...))
+	})
+}
+
+// RoleNotIn applies the NotIn predicate on the "role" field.
+func RoleNotIn(vs ...schema.StaffRole) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldRole), v...))
+	})
+}
+
+// RankEQ applies the EQ predicate on the "rank" field.
+func RankEQ(v schema.StaffRank) predicate.Staff {
+	vc := v
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldRank), vc))
+	})
+}
+
+// RankNEQ applies the NEQ predicate on the "rank" field.
+func RankNEQ(v schema.StaffRank) predicate.Staff {
+	vc := v
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldRank), vc))
+	})
+}
+
+// RankIn applies the In predicate on the "rank" field.
+func RankIn(vs ...schema.StaffRank) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldRank), v...))
+	})
+}
+
+// RankNotIn applies the NotIn predicate on the "rank" field.
+func RankNotIn(vs ...schema.StaffRank) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldRank), v...))
+	})
+}
+
+// CreatedAtEQ applies the EQ predicate on the "created_at" field.
+func CreatedAtEQ(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
+func CreatedAtNEQ(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtIn applies the In predicate on the "created_at" field.
+func CreatedAtIn(vs ...time.Time) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCreatedAt), v...))
+	})
+}
+
+// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
+func CreatedAtNotIn(vs ...time.Time) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCreatedAt), v...))
+	})
+}
+
+// CreatedAtGT applies the GT predicate on the "created_at" field.
+func CreatedAtGT(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtGTE applies the GTE predicate on the "created_at" field.
+func CreatedAtGTE(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtLT applies the LT predicate on the "created_at" field.
+func CreatedAtLT(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtLTE applies the LTE predicate on the "created_at" field.
+func CreatedAtLTE(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
+	})
+}
+
+// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
+func UpdatedAtEQ(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
+func UpdatedAtNEQ(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtIn applies the In predicate on the "updated_at" field.
+func UpdatedAtIn(vs ...time.Time) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldUpdatedAt), v...))
+	})
+}
+
+// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
+func UpdatedAtNotIn(vs ...time.Time) predicate.Staff {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Staff(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldUpdatedAt), v...))
+	})
+}
+
+// UpdatedAtGT applies the GT predicate on the "updated_at" field.
+func UpdatedAtGT(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
+func UpdatedAtGTE(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtLT applies the LT predicate on the "updated_at" field.
+func UpdatedAtLT(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
+func UpdatedAtLTE(v time.Time) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// HasDepartment applies the HasEdge predicate on the "department" edge.
+func HasDepartment() predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(DepartmentTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDepartmentWith applies the HasEdge predicate on the "department" edge with a given conditions (other predicates).
+func HasDepartmentWith(preds ...predicate.Department) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(DepartmentInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasClasses applies the HasEdge predicate on the "classes" edge.
+func HasClasses() predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ClassesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ClassesTable, ClassesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasClassesWith applies the HasEdge predicate on the "classes" edge with a given conditions (other predicates).
+func HasClassesWith(preds ...predicate.Class) predicate.Staff {
+	return predicate.Staff(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ClassesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ClassesTable, ClassesPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

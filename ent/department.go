@@ -36,9 +36,11 @@ type Department struct {
 type DepartmentEdges struct {
 	// Students holds the value of the students edge.
 	Students []*Student `json:"students,omitempty"`
+	// Staffs holds the value of the staffs edge.
+	Staffs []*Staff `json:"staffs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // StudentsOrErr returns the Students value or an error if the edge
@@ -48,6 +50,15 @@ func (e DepartmentEdges) StudentsOrErr() ([]*Student, error) {
 		return e.Students, nil
 	}
 	return nil, &NotLoadedError{edge: "students"}
+}
+
+// StaffsOrErr returns the Staffs value or an error if the edge
+// was not loaded in eager-loading.
+func (e DepartmentEdges) StaffsOrErr() ([]*Staff, error) {
+	if e.loadedTypes[1] {
+		return e.Staffs, nil
+	}
+	return nil, &NotLoadedError{edge: "staffs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -120,6 +131,11 @@ func (d *Department) assignValues(columns []string, values []interface{}) error 
 // QueryStudents queries the "students" edge of the Department entity.
 func (d *Department) QueryStudents() *StudentQuery {
 	return (&DepartmentClient{config: d.config}).QueryStudents(d)
+}
+
+// QueryStaffs queries the "staffs" edge of the Department entity.
+func (d *Department) QueryStaffs() *StaffQuery {
+	return (&DepartmentClient{config: d.config}).QueryStaffs(d)
 }
 
 // Update returns a builder for updating this Department.

@@ -2,19 +2,82 @@
 
 package staff
 
+import (
+	"college/ent/schema"
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+)
+
 const (
 	// Label holds the string label denoting the staff type in the database.
 	Label = "staff"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldFirstname holds the string denoting the firstname field in the database.
+	FieldFirstname = "firstname"
+	// FieldLastname holds the string denoting the lastname field in the database.
+	FieldLastname = "lastname"
+	// FieldEmail holds the string denoting the email field in the database.
+	FieldEmail = "email"
+	// FieldTelephone holds the string denoting the telephone field in the database.
+	FieldTelephone = "telephone"
+	// FieldSalary holds the string denoting the salary field in the database.
+	FieldSalary = "salary"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
+	// FieldRank holds the string denoting the rank field in the database.
+	FieldRank = "rank"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
+	// EdgeDepartment holds the string denoting the department edge name in mutations.
+	EdgeDepartment = "department"
+	// EdgeClasses holds the string denoting the classes edge name in mutations.
+	EdgeClasses = "classes"
 	// Table holds the table name of the staff in the database.
 	Table = "staffs"
+	// DepartmentTable is the table that holds the department relation/edge.
+	DepartmentTable = "staffs"
+	// DepartmentInverseTable is the table name for the Department entity.
+	// It exists in this package in order to avoid circular dependency with the "department" package.
+	DepartmentInverseTable = "departments"
+	// DepartmentColumn is the table column denoting the department relation/edge.
+	DepartmentColumn = "department_id"
+	// ClassesTable is the table that holds the classes relation/edge. The primary key declared below.
+	ClassesTable = "class_instructor"
+	// ClassesInverseTable is the table name for the Class entity.
+	// It exists in this package in order to avoid circular dependency with the "class" package.
+	ClassesInverseTable = "classes"
 )
 
 // Columns holds all SQL columns for staff fields.
 var Columns = []string{
 	FieldID,
+	FieldFirstname,
+	FieldLastname,
+	FieldEmail,
+	FieldTelephone,
+	FieldSalary,
+	FieldRole,
+	FieldRank,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 }
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "staffs"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"department_id",
+}
+
+var (
+	// ClassesPrimaryKey and ClassesColumn2 are the table columns denoting the
+	// primary key for the classes relation (M2M).
+	ClassesPrimaryKey = []string{"class_id", "instructor_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -23,5 +86,51 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
+}
+
+var (
+	// FirstnameValidator is a validator for the "firstname" field. It is called by the builders before save.
+	FirstnameValidator func(string) error
+	// LastnameValidator is a validator for the "lastname" field. It is called by the builders before save.
+	LastnameValidator func(string) error
+	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	EmailValidator func(string) error
+	// TelephoneValidator is a validator for the "telephone" field. It is called by the builders before save.
+	TelephoneValidator func(string) error
+	// SalaryValidator is a validator for the "salary" field. It is called by the builders before save.
+	SalaryValidator func(int) error
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
+)
+
+// RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
+func RoleValidator(r schema.StaffRole) error {
+	switch r {
+	case "Academic-Staff", "Non-Academic-Staff":
+		return nil
+	default:
+		return fmt.Errorf("staff: invalid enum value for role field: %q", r)
+	}
+}
+
+// RankValidator is a validator for the "rank" field enum values. It is called by the builders before save.
+func RankValidator(r schema.StaffRank) error {
+	switch r {
+	case "Lecturer-I", "Lecturer-II", "Senior-Lecturer-I", "Senior-Lecturer-II", "Principal-Lecturer", "HOD":
+		return nil
+	default:
+		return fmt.Errorf("staff: invalid enum value for rank field: %q", r)
+	}
 }

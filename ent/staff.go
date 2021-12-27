@@ -3,18 +3,78 @@
 package ent
 
 import (
+	"college/ent/department"
+	"college/ent/schema"
 	"college/ent/staff"
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 // Staff is the model entity for the Staff schema.
 type Staff struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
+	// Firstname holds the value of the "firstname" field.
+	Firstname string `json:"firstname,omitempty"`
+	// Lastname holds the value of the "lastname" field.
+	Lastname string `json:"lastname,omitempty"`
+	// Email holds the value of the "email" field.
+	Email string `json:"email,omitempty"`
+	// Telephone holds the value of the "telephone" field.
+	Telephone string `json:"telephone,omitempty"`
+	// Salary holds the value of the "salary" field.
+	Salary int `json:"salary,omitempty"`
+	// Role holds the value of the "role" field.
+	Role schema.StaffRole `json:"role,omitempty"`
+	// Rank holds the value of the "rank" field.
+	Rank schema.StaffRank `json:"rank,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the StaffQuery when eager-loading is set.
+	Edges         StaffEdges `json:"edges"`
+	department_id *uuid.UUID
+}
+
+// StaffEdges holds the relations/edges for other nodes in the graph.
+type StaffEdges struct {
+	// Department holds the value of the department edge.
+	Department *Department `json:"department,omitempty"`
+	// Classes holds the value of the classes edge.
+	Classes []*Class `json:"classes,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// DepartmentOrErr returns the Department value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e StaffEdges) DepartmentOrErr() (*Department, error) {
+	if e.loadedTypes[0] {
+		if e.Department == nil {
+			// The edge department was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: department.Label}
+		}
+		return e.Department, nil
+	}
+	return nil, &NotLoadedError{edge: "department"}
+}
+
+// ClassesOrErr returns the Classes value or an error if the edge
+// was not loaded in eager-loading.
+func (e StaffEdges) ClassesOrErr() ([]*Class, error) {
+	if e.loadedTypes[1] {
+		return e.Classes, nil
+	}
+	return nil, &NotLoadedError{edge: "classes"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -22,8 +82,16 @@ func (*Staff) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case staff.FieldID:
+		case staff.FieldSalary:
 			values[i] = new(sql.NullInt64)
+		case staff.FieldFirstname, staff.FieldLastname, staff.FieldEmail, staff.FieldTelephone, staff.FieldRole, staff.FieldRank:
+			values[i] = new(sql.NullString)
+		case staff.FieldCreatedAt, staff.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
+		case staff.FieldID:
+			values[i] = new(uuid.UUID)
+		case staff.ForeignKeys[0]: // department_id
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Staff", columns[i])
 		}
@@ -40,14 +108,85 @@ func (s *Staff) assignValues(columns []string, values []interface{}) error {
 	for i := range columns {
 		switch columns[i] {
 		case staff.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				s.ID = *value
 			}
-			s.ID = int(value.Int64)
+		case staff.FieldFirstname:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field firstname", values[i])
+			} else if value.Valid {
+				s.Firstname = value.String
+			}
+		case staff.FieldLastname:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field lastname", values[i])
+			} else if value.Valid {
+				s.Lastname = value.String
+			}
+		case staff.FieldEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field email", values[i])
+			} else if value.Valid {
+				s.Email = value.String
+			}
+		case staff.FieldTelephone:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field telephone", values[i])
+			} else if value.Valid {
+				s.Telephone = value.String
+			}
+		case staff.FieldSalary:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field salary", values[i])
+			} else if value.Valid {
+				s.Salary = int(value.Int64)
+			}
+		case staff.FieldRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field role", values[i])
+			} else if value.Valid {
+				s.Role = schema.StaffRole(value.String)
+			}
+		case staff.FieldRank:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field rank", values[i])
+			} else if value.Valid {
+				s.Rank = schema.StaffRank(value.String)
+			}
+		case staff.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				s.CreatedAt = value.Time
+			}
+		case staff.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				s.UpdatedAt = value.Time
+			}
+		case staff.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field department_id", values[i])
+			} else if value.Valid {
+				s.department_id = new(uuid.UUID)
+				*s.department_id = *value.S.(*uuid.UUID)
+			}
 		}
 	}
 	return nil
+}
+
+// QueryDepartment queries the "department" edge of the Staff entity.
+func (s *Staff) QueryDepartment() *DepartmentQuery {
+	return (&StaffClient{config: s.config}).QueryDepartment(s)
+}
+
+// QueryClasses queries the "classes" edge of the Staff entity.
+func (s *Staff) QueryClasses() *ClassQuery {
+	return (&StaffClient{config: s.config}).QueryClasses(s)
 }
 
 // Update returns a builder for updating this Staff.
@@ -73,6 +212,24 @@ func (s *Staff) String() string {
 	var builder strings.Builder
 	builder.WriteString("Staff(")
 	builder.WriteString(fmt.Sprintf("id=%v", s.ID))
+	builder.WriteString(", firstname=")
+	builder.WriteString(s.Firstname)
+	builder.WriteString(", lastname=")
+	builder.WriteString(s.Lastname)
+	builder.WriteString(", email=")
+	builder.WriteString(s.Email)
+	builder.WriteString(", telephone=")
+	builder.WriteString(s.Telephone)
+	builder.WriteString(", salary=")
+	builder.WriteString(fmt.Sprintf("%v", s.Salary))
+	builder.WriteString(", role=")
+	builder.WriteString(fmt.Sprintf("%v", s.Role))
+	builder.WriteString(", rank=")
+	builder.WriteString(fmt.Sprintf("%v", s.Rank))
+	builder.WriteString(", created_at=")
+	builder.WriteString(s.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(s.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

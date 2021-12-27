@@ -4,6 +4,7 @@ package ent
 
 import (
 	"college/ent/department"
+	"college/ent/staff"
 	"college/ent/student"
 	"context"
 	"errors"
@@ -87,6 +88,21 @@ func (dc *DepartmentCreate) AddStudents(s ...*Student) *DepartmentCreate {
 		ids[i] = s[i].ID
 	}
 	return dc.AddStudentIDs(ids...)
+}
+
+// AddStaffIDs adds the "staffs" edge to the Staff entity by IDs.
+func (dc *DepartmentCreate) AddStaffIDs(ids ...uuid.UUID) *DepartmentCreate {
+	dc.mutation.AddStaffIDs(ids...)
+	return dc
+}
+
+// AddStaffs adds the "staffs" edges to the Staff entity.
+func (dc *DepartmentCreate) AddStaffs(s ...*Staff) *DepartmentCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return dc.AddStaffIDs(ids...)
 }
 
 // Mutation returns the DepartmentMutation object of the builder.
@@ -289,6 +305,25 @@ func (dc *DepartmentCreate) createSpec() (*Department, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: student.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := dc.mutation.StaffsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.StaffsTable,
+			Columns: []string{department.StaffsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: staff.FieldID,
 				},
 			},
 		}

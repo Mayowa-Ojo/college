@@ -245,6 +245,22 @@ func (c *ClassClient) QueryStudent(cl *Class) *StudentQuery {
 	return query
 }
 
+// QueryInstructors queries the instructors edge of a Class.
+func (c *ClassClient) QueryInstructors(cl *Class) *StaffQuery {
+	query := &StaffQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := cl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(class.Table, class.FieldID, id),
+			sqlgraph.To(staff.Table, staff.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, class.InstructorsTable, class.InstructorsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(cl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ClassClient) Hooks() []Hook {
 	return c.hooks.Class
@@ -351,6 +367,22 @@ func (c *DepartmentClient) QueryStudents(d *Department) *StudentQuery {
 	return query
 }
 
+// QueryStaffs queries the staffs edge of a Department.
+func (c *DepartmentClient) QueryStaffs(d *Department) *StaffQuery {
+	query := &StaffQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := d.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(department.Table, department.FieldID, id),
+			sqlgraph.To(staff.Table, staff.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, department.StaffsTable, department.StaffsColumn),
+		)
+		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *DepartmentClient) Hooks() []Hook {
 	return c.hooks.Department
@@ -396,7 +428,7 @@ func (c *StaffClient) UpdateOne(s *Staff) *StaffUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *StaffClient) UpdateOneID(id int) *StaffUpdateOne {
+func (c *StaffClient) UpdateOneID(id uuid.UUID) *StaffUpdateOne {
 	mutation := newStaffMutation(c.config, OpUpdateOne, withStaffID(id))
 	return &StaffUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -413,7 +445,7 @@ func (c *StaffClient) DeleteOne(s *Staff) *StaffDeleteOne {
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *StaffClient) DeleteOneID(id int) *StaffDeleteOne {
+func (c *StaffClient) DeleteOneID(id uuid.UUID) *StaffDeleteOne {
 	builder := c.Delete().Where(staff.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -428,17 +460,49 @@ func (c *StaffClient) Query() *StaffQuery {
 }
 
 // Get returns a Staff entity by its id.
-func (c *StaffClient) Get(ctx context.Context, id int) (*Staff, error) {
+func (c *StaffClient) Get(ctx context.Context, id uuid.UUID) (*Staff, error) {
 	return c.Query().Where(staff.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *StaffClient) GetX(ctx context.Context, id int) *Staff {
+func (c *StaffClient) GetX(ctx context.Context, id uuid.UUID) *Staff {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryDepartment queries the department edge of a Staff.
+func (c *StaffClient) QueryDepartment(s *Staff) *DepartmentQuery {
+	query := &DepartmentQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(staff.Table, staff.FieldID, id),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, staff.DepartmentTable, staff.DepartmentColumn),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryClasses queries the classes edge of a Staff.
+func (c *StaffClient) QueryClasses(s *Staff) *ClassQuery {
+	query := &ClassQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := s.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(staff.Table, staff.FieldID, id),
+			sqlgraph.To(class.Table, class.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, staff.ClassesTable, staff.ClassesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

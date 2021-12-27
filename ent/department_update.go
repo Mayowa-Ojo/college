@@ -5,6 +5,7 @@ package ent
 import (
 	"college/ent/department"
 	"college/ent/predicate"
+	"college/ent/staff"
 	"college/ent/student"
 	"context"
 	"fmt"
@@ -82,6 +83,21 @@ func (du *DepartmentUpdate) AddStudents(s ...*Student) *DepartmentUpdate {
 	return du.AddStudentIDs(ids...)
 }
 
+// AddStaffIDs adds the "staffs" edge to the Staff entity by IDs.
+func (du *DepartmentUpdate) AddStaffIDs(ids ...uuid.UUID) *DepartmentUpdate {
+	du.mutation.AddStaffIDs(ids...)
+	return du
+}
+
+// AddStaffs adds the "staffs" edges to the Staff entity.
+func (du *DepartmentUpdate) AddStaffs(s ...*Staff) *DepartmentUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return du.AddStaffIDs(ids...)
+}
+
 // Mutation returns the DepartmentMutation object of the builder.
 func (du *DepartmentUpdate) Mutation() *DepartmentMutation {
 	return du.mutation
@@ -106,6 +122,27 @@ func (du *DepartmentUpdate) RemoveStudents(s ...*Student) *DepartmentUpdate {
 		ids[i] = s[i].ID
 	}
 	return du.RemoveStudentIDs(ids...)
+}
+
+// ClearStaffs clears all "staffs" edges to the Staff entity.
+func (du *DepartmentUpdate) ClearStaffs() *DepartmentUpdate {
+	du.mutation.ClearStaffs()
+	return du
+}
+
+// RemoveStaffIDs removes the "staffs" edge to Staff entities by IDs.
+func (du *DepartmentUpdate) RemoveStaffIDs(ids ...uuid.UUID) *DepartmentUpdate {
+	du.mutation.RemoveStaffIDs(ids...)
+	return du
+}
+
+// RemoveStaffs removes "staffs" edges to Staff entities.
+func (du *DepartmentUpdate) RemoveStaffs(s ...*Staff) *DepartmentUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return du.RemoveStaffIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -304,6 +341,60 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if du.mutation.StaffsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.StaffsTable,
+			Columns: []string{department.StaffsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: staff.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := du.mutation.RemovedStaffsIDs(); len(nodes) > 0 && !du.mutation.StaffsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.StaffsTable,
+			Columns: []string{department.StaffsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: staff.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := du.mutation.StaffsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.StaffsTable,
+			Columns: []string{department.StaffsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: staff.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, du.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{department.Label}
@@ -376,6 +467,21 @@ func (duo *DepartmentUpdateOne) AddStudents(s ...*Student) *DepartmentUpdateOne 
 	return duo.AddStudentIDs(ids...)
 }
 
+// AddStaffIDs adds the "staffs" edge to the Staff entity by IDs.
+func (duo *DepartmentUpdateOne) AddStaffIDs(ids ...uuid.UUID) *DepartmentUpdateOne {
+	duo.mutation.AddStaffIDs(ids...)
+	return duo
+}
+
+// AddStaffs adds the "staffs" edges to the Staff entity.
+func (duo *DepartmentUpdateOne) AddStaffs(s ...*Staff) *DepartmentUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return duo.AddStaffIDs(ids...)
+}
+
 // Mutation returns the DepartmentMutation object of the builder.
 func (duo *DepartmentUpdateOne) Mutation() *DepartmentMutation {
 	return duo.mutation
@@ -400,6 +506,27 @@ func (duo *DepartmentUpdateOne) RemoveStudents(s ...*Student) *DepartmentUpdateO
 		ids[i] = s[i].ID
 	}
 	return duo.RemoveStudentIDs(ids...)
+}
+
+// ClearStaffs clears all "staffs" edges to the Staff entity.
+func (duo *DepartmentUpdateOne) ClearStaffs() *DepartmentUpdateOne {
+	duo.mutation.ClearStaffs()
+	return duo
+}
+
+// RemoveStaffIDs removes the "staffs" edge to Staff entities by IDs.
+func (duo *DepartmentUpdateOne) RemoveStaffIDs(ids ...uuid.UUID) *DepartmentUpdateOne {
+	duo.mutation.RemoveStaffIDs(ids...)
+	return duo
+}
+
+// RemoveStaffs removes "staffs" edges to Staff entities.
+func (duo *DepartmentUpdateOne) RemoveStaffs(s ...*Staff) *DepartmentUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return duo.RemoveStaffIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -614,6 +741,60 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: student.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if duo.mutation.StaffsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.StaffsTable,
+			Columns: []string{department.StaffsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: staff.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := duo.mutation.RemovedStaffsIDs(); len(nodes) > 0 && !duo.mutation.StaffsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.StaffsTable,
+			Columns: []string{department.StaffsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: staff.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := duo.mutation.StaffsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.StaffsTable,
+			Columns: []string{department.StaffsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: staff.FieldID,
 				},
 			},
 		}

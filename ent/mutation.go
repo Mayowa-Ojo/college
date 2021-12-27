@@ -7,6 +7,7 @@ import (
 	"college/ent/department"
 	"college/ent/predicate"
 	"college/ent/schema"
+	"college/ent/staff"
 	"college/ent/student"
 	"context"
 	"fmt"
@@ -36,24 +37,27 @@ const (
 // ClassMutation represents an operation that mutates the Class nodes in the graph.
 type ClassMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	title          *string
-	code           *string
-	unit           *int
-	addunit        *int
-	semester       *schema.Semester
-	location       *string
-	created_at     *time.Time
-	updated_at     *time.Time
-	clearedFields  map[string]struct{}
-	student        map[uuid.UUID]struct{}
-	removedstudent map[uuid.UUID]struct{}
-	clearedstudent bool
-	done           bool
-	oldValue       func(context.Context) (*Class, error)
-	predicates     []predicate.Class
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	title              *string
+	code               *string
+	unit               *int
+	addunit            *int
+	semester           *schema.Semester
+	location           *string
+	created_at         *time.Time
+	updated_at         *time.Time
+	clearedFields      map[string]struct{}
+	student            map[uuid.UUID]struct{}
+	removedstudent     map[uuid.UUID]struct{}
+	clearedstudent     bool
+	instructors        map[uuid.UUID]struct{}
+	removedinstructors map[uuid.UUID]struct{}
+	clearedinstructors bool
+	done               bool
+	oldValue           func(context.Context) (*Class, error)
+	predicates         []predicate.Class
 }
 
 var _ ent.Mutation = (*ClassMutation)(nil)
@@ -467,6 +471,60 @@ func (m *ClassMutation) ResetStudent() {
 	m.removedstudent = nil
 }
 
+// AddInstructorIDs adds the "instructors" edge to the Staff entity by ids.
+func (m *ClassMutation) AddInstructorIDs(ids ...uuid.UUID) {
+	if m.instructors == nil {
+		m.instructors = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.instructors[ids[i]] = struct{}{}
+	}
+}
+
+// ClearInstructors clears the "instructors" edge to the Staff entity.
+func (m *ClassMutation) ClearInstructors() {
+	m.clearedinstructors = true
+}
+
+// InstructorsCleared reports if the "instructors" edge to the Staff entity was cleared.
+func (m *ClassMutation) InstructorsCleared() bool {
+	return m.clearedinstructors
+}
+
+// RemoveInstructorIDs removes the "instructors" edge to the Staff entity by IDs.
+func (m *ClassMutation) RemoveInstructorIDs(ids ...uuid.UUID) {
+	if m.removedinstructors == nil {
+		m.removedinstructors = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.instructors, ids[i])
+		m.removedinstructors[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedInstructors returns the removed IDs of the "instructors" edge to the Staff entity.
+func (m *ClassMutation) RemovedInstructorsIDs() (ids []uuid.UUID) {
+	for id := range m.removedinstructors {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// InstructorsIDs returns the "instructors" edge IDs in the mutation.
+func (m *ClassMutation) InstructorsIDs() (ids []uuid.UUID) {
+	for id := range m.instructors {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetInstructors resets all changes to the "instructors" edge.
+func (m *ClassMutation) ResetInstructors() {
+	m.instructors = nil
+	m.clearedinstructors = false
+	m.removedinstructors = nil
+}
+
 // Where appends a list predicates to the ClassMutation builder.
 func (m *ClassMutation) Where(ps ...predicate.Class) {
 	m.predicates = append(m.predicates, ps...)
@@ -702,9 +760,12 @@ func (m *ClassMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ClassMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.student != nil {
 		edges = append(edges, class.EdgeStudent)
+	}
+	if m.instructors != nil {
+		edges = append(edges, class.EdgeInstructors)
 	}
 	return edges
 }
@@ -719,15 +780,24 @@ func (m *ClassMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case class.EdgeInstructors:
+		ids := make([]ent.Value, 0, len(m.instructors))
+		for id := range m.instructors {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ClassMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedstudent != nil {
 		edges = append(edges, class.EdgeStudent)
+	}
+	if m.removedinstructors != nil {
+		edges = append(edges, class.EdgeInstructors)
 	}
 	return edges
 }
@@ -742,15 +812,24 @@ func (m *ClassMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case class.EdgeInstructors:
+		ids := make([]ent.Value, 0, len(m.removedinstructors))
+		for id := range m.removedinstructors {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ClassMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedstudent {
 		edges = append(edges, class.EdgeStudent)
+	}
+	if m.clearedinstructors {
+		edges = append(edges, class.EdgeInstructors)
 	}
 	return edges
 }
@@ -761,6 +840,8 @@ func (m *ClassMutation) EdgeCleared(name string) bool {
 	switch name {
 	case class.EdgeStudent:
 		return m.clearedstudent
+	case class.EdgeInstructors:
+		return m.clearedinstructors
 	}
 	return false
 }
@@ -779,6 +860,9 @@ func (m *ClassMutation) ResetEdge(name string) error {
 	switch name {
 	case class.EdgeStudent:
 		m.ResetStudent()
+		return nil
+	case class.EdgeInstructors:
+		m.ResetInstructors()
 		return nil
 	}
 	return fmt.Errorf("unknown Class edge %s", name)
@@ -799,6 +883,9 @@ type DepartmentMutation struct {
 	students        map[uuid.UUID]struct{}
 	removedstudents map[uuid.UUID]struct{}
 	clearedstudents bool
+	staffs          map[uuid.UUID]struct{}
+	removedstaffs   map[uuid.UUID]struct{}
+	clearedstaffs   bool
 	done            bool
 	oldValue        func(context.Context) (*Department, error)
 	predicates      []predicate.Department
@@ -1123,6 +1210,60 @@ func (m *DepartmentMutation) ResetStudents() {
 	m.removedstudents = nil
 }
 
+// AddStaffIDs adds the "staffs" edge to the Staff entity by ids.
+func (m *DepartmentMutation) AddStaffIDs(ids ...uuid.UUID) {
+	if m.staffs == nil {
+		m.staffs = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.staffs[ids[i]] = struct{}{}
+	}
+}
+
+// ClearStaffs clears the "staffs" edge to the Staff entity.
+func (m *DepartmentMutation) ClearStaffs() {
+	m.clearedstaffs = true
+}
+
+// StaffsCleared reports if the "staffs" edge to the Staff entity was cleared.
+func (m *DepartmentMutation) StaffsCleared() bool {
+	return m.clearedstaffs
+}
+
+// RemoveStaffIDs removes the "staffs" edge to the Staff entity by IDs.
+func (m *DepartmentMutation) RemoveStaffIDs(ids ...uuid.UUID) {
+	if m.removedstaffs == nil {
+		m.removedstaffs = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.staffs, ids[i])
+		m.removedstaffs[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedStaffs returns the removed IDs of the "staffs" edge to the Staff entity.
+func (m *DepartmentMutation) RemovedStaffsIDs() (ids []uuid.UUID) {
+	for id := range m.removedstaffs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// StaffsIDs returns the "staffs" edge IDs in the mutation.
+func (m *DepartmentMutation) StaffsIDs() (ids []uuid.UUID) {
+	for id := range m.staffs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetStaffs resets all changes to the "staffs" edge.
+func (m *DepartmentMutation) ResetStaffs() {
+	m.staffs = nil
+	m.clearedstaffs = false
+	m.removedstaffs = nil
+}
+
 // Where appends a list predicates to the DepartmentMutation builder.
 func (m *DepartmentMutation) Where(ps ...predicate.Department) {
 	m.predicates = append(m.predicates, ps...)
@@ -1309,9 +1450,12 @@ func (m *DepartmentMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *DepartmentMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.students != nil {
 		edges = append(edges, department.EdgeStudents)
+	}
+	if m.staffs != nil {
+		edges = append(edges, department.EdgeStaffs)
 	}
 	return edges
 }
@@ -1326,15 +1470,24 @@ func (m *DepartmentMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case department.EdgeStaffs:
+		ids := make([]ent.Value, 0, len(m.staffs))
+		for id := range m.staffs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *DepartmentMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedstudents != nil {
 		edges = append(edges, department.EdgeStudents)
+	}
+	if m.removedstaffs != nil {
+		edges = append(edges, department.EdgeStaffs)
 	}
 	return edges
 }
@@ -1349,15 +1502,24 @@ func (m *DepartmentMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case department.EdgeStaffs:
+		ids := make([]ent.Value, 0, len(m.removedstaffs))
+		for id := range m.removedstaffs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *DepartmentMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedstudents {
 		edges = append(edges, department.EdgeStudents)
+	}
+	if m.clearedstaffs {
+		edges = append(edges, department.EdgeStaffs)
 	}
 	return edges
 }
@@ -1368,6 +1530,8 @@ func (m *DepartmentMutation) EdgeCleared(name string) bool {
 	switch name {
 	case department.EdgeStudents:
 		return m.clearedstudents
+	case department.EdgeStaffs:
+		return m.clearedstaffs
 	}
 	return false
 }
@@ -1387,6 +1551,9 @@ func (m *DepartmentMutation) ResetEdge(name string) error {
 	case department.EdgeStudents:
 		m.ResetStudents()
 		return nil
+	case department.EdgeStaffs:
+		m.ResetStaffs()
+		return nil
 	}
 	return fmt.Errorf("unknown Department edge %s", name)
 }
@@ -1394,13 +1561,28 @@ func (m *DepartmentMutation) ResetEdge(name string) error {
 // StaffMutation represents an operation that mutates the Staff nodes in the graph.
 type StaffMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Staff, error)
-	predicates    []predicate.Staff
+	op                Op
+	typ               string
+	id                *uuid.UUID
+	firstname         *string
+	lastname          *string
+	email             *string
+	telephone         *string
+	salary            *int
+	addsalary         *int
+	role              *schema.StaffRole
+	rank              *schema.StaffRank
+	created_at        *time.Time
+	updated_at        *time.Time
+	clearedFields     map[string]struct{}
+	department        *uuid.UUID
+	cleareddepartment bool
+	classes           map[uuid.UUID]struct{}
+	removedclasses    map[uuid.UUID]struct{}
+	clearedclasses    bool
+	done              bool
+	oldValue          func(context.Context) (*Staff, error)
+	predicates        []predicate.Staff
 }
 
 var _ ent.Mutation = (*StaffMutation)(nil)
@@ -1423,7 +1605,7 @@ func newStaffMutation(c config, op Op, opts ...staffOption) *StaffMutation {
 }
 
 // withStaffID sets the ID field of the mutation.
-func withStaffID(id int) staffOption {
+func withStaffID(id uuid.UUID) staffOption {
 	return func(m *StaffMutation) {
 		var (
 			err   error
@@ -1473,13 +1655,456 @@ func (m StaffMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Staff entities.
+func (m *StaffMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *StaffMutation) ID() (id int, exists bool) {
+func (m *StaffMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
 	return *m.id, true
+}
+
+// SetFirstname sets the "firstname" field.
+func (m *StaffMutation) SetFirstname(s string) {
+	m.firstname = &s
+}
+
+// Firstname returns the value of the "firstname" field in the mutation.
+func (m *StaffMutation) Firstname() (r string, exists bool) {
+	v := m.firstname
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFirstname returns the old "firstname" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldFirstname(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldFirstname is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldFirstname requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFirstname: %w", err)
+	}
+	return oldValue.Firstname, nil
+}
+
+// ResetFirstname resets all changes to the "firstname" field.
+func (m *StaffMutation) ResetFirstname() {
+	m.firstname = nil
+}
+
+// SetLastname sets the "lastname" field.
+func (m *StaffMutation) SetLastname(s string) {
+	m.lastname = &s
+}
+
+// Lastname returns the value of the "lastname" field in the mutation.
+func (m *StaffMutation) Lastname() (r string, exists bool) {
+	v := m.lastname
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastname returns the old "lastname" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldLastname(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldLastname is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldLastname requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastname: %w", err)
+	}
+	return oldValue.Lastname, nil
+}
+
+// ResetLastname resets all changes to the "lastname" field.
+func (m *StaffMutation) ResetLastname() {
+	m.lastname = nil
+}
+
+// SetEmail sets the "email" field.
+func (m *StaffMutation) SetEmail(s string) {
+	m.email = &s
+}
+
+// Email returns the value of the "email" field in the mutation.
+func (m *StaffMutation) Email() (r string, exists bool) {
+	v := m.email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEmail returns the old "email" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEmail: %w", err)
+	}
+	return oldValue.Email, nil
+}
+
+// ResetEmail resets all changes to the "email" field.
+func (m *StaffMutation) ResetEmail() {
+	m.email = nil
+}
+
+// SetTelephone sets the "telephone" field.
+func (m *StaffMutation) SetTelephone(s string) {
+	m.telephone = &s
+}
+
+// Telephone returns the value of the "telephone" field in the mutation.
+func (m *StaffMutation) Telephone() (r string, exists bool) {
+	v := m.telephone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTelephone returns the old "telephone" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldTelephone(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldTelephone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldTelephone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTelephone: %w", err)
+	}
+	return oldValue.Telephone, nil
+}
+
+// ResetTelephone resets all changes to the "telephone" field.
+func (m *StaffMutation) ResetTelephone() {
+	m.telephone = nil
+}
+
+// SetSalary sets the "salary" field.
+func (m *StaffMutation) SetSalary(i int) {
+	m.salary = &i
+	m.addsalary = nil
+}
+
+// Salary returns the value of the "salary" field in the mutation.
+func (m *StaffMutation) Salary() (r int, exists bool) {
+	v := m.salary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSalary returns the old "salary" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldSalary(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldSalary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldSalary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSalary: %w", err)
+	}
+	return oldValue.Salary, nil
+}
+
+// AddSalary adds i to the "salary" field.
+func (m *StaffMutation) AddSalary(i int) {
+	if m.addsalary != nil {
+		*m.addsalary += i
+	} else {
+		m.addsalary = &i
+	}
+}
+
+// AddedSalary returns the value that was added to the "salary" field in this mutation.
+func (m *StaffMutation) AddedSalary() (r int, exists bool) {
+	v := m.addsalary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSalary resets all changes to the "salary" field.
+func (m *StaffMutation) ResetSalary() {
+	m.salary = nil
+	m.addsalary = nil
+}
+
+// SetRole sets the "role" field.
+func (m *StaffMutation) SetRole(sr schema.StaffRole) {
+	m.role = &sr
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *StaffMutation) Role() (r schema.StaffRole, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldRole(ctx context.Context) (v schema.StaffRole, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *StaffMutation) ResetRole() {
+	m.role = nil
+}
+
+// SetRank sets the "rank" field.
+func (m *StaffMutation) SetRank(sr schema.StaffRank) {
+	m.rank = &sr
+}
+
+// Rank returns the value of the "rank" field in the mutation.
+func (m *StaffMutation) Rank() (r schema.StaffRank, exists bool) {
+	v := m.rank
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRank returns the old "rank" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldRank(ctx context.Context) (v schema.StaffRank, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldRank is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldRank requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRank: %w", err)
+	}
+	return oldValue.Rank, nil
+}
+
+// ResetRank resets all changes to the "rank" field.
+func (m *StaffMutation) ResetRank() {
+	m.rank = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *StaffMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *StaffMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *StaffMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *StaffMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *StaffMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Staff entity.
+// If the Staff object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StaffMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *StaffMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDepartmentID sets the "department" edge to the Department entity by id.
+func (m *StaffMutation) SetDepartmentID(id uuid.UUID) {
+	m.department = &id
+}
+
+// ClearDepartment clears the "department" edge to the Department entity.
+func (m *StaffMutation) ClearDepartment() {
+	m.cleareddepartment = true
+}
+
+// DepartmentCleared reports if the "department" edge to the Department entity was cleared.
+func (m *StaffMutation) DepartmentCleared() bool {
+	return m.cleareddepartment
+}
+
+// DepartmentID returns the "department" edge ID in the mutation.
+func (m *StaffMutation) DepartmentID() (id uuid.UUID, exists bool) {
+	if m.department != nil {
+		return *m.department, true
+	}
+	return
+}
+
+// DepartmentIDs returns the "department" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// DepartmentID instead. It exists only for internal usage by the builders.
+func (m *StaffMutation) DepartmentIDs() (ids []uuid.UUID) {
+	if id := m.department; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetDepartment resets all changes to the "department" edge.
+func (m *StaffMutation) ResetDepartment() {
+	m.department = nil
+	m.cleareddepartment = false
+}
+
+// AddClassIDs adds the "classes" edge to the Class entity by ids.
+func (m *StaffMutation) AddClassIDs(ids ...uuid.UUID) {
+	if m.classes == nil {
+		m.classes = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.classes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearClasses clears the "classes" edge to the Class entity.
+func (m *StaffMutation) ClearClasses() {
+	m.clearedclasses = true
+}
+
+// ClassesCleared reports if the "classes" edge to the Class entity was cleared.
+func (m *StaffMutation) ClassesCleared() bool {
+	return m.clearedclasses
+}
+
+// RemoveClassIDs removes the "classes" edge to the Class entity by IDs.
+func (m *StaffMutation) RemoveClassIDs(ids ...uuid.UUID) {
+	if m.removedclasses == nil {
+		m.removedclasses = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.classes, ids[i])
+		m.removedclasses[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedClasses returns the removed IDs of the "classes" edge to the Class entity.
+func (m *StaffMutation) RemovedClassesIDs() (ids []uuid.UUID) {
+	for id := range m.removedclasses {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ClassesIDs returns the "classes" edge IDs in the mutation.
+func (m *StaffMutation) ClassesIDs() (ids []uuid.UUID) {
+	for id := range m.classes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetClasses resets all changes to the "classes" edge.
+func (m *StaffMutation) ResetClasses() {
+	m.classes = nil
+	m.clearedclasses = false
+	m.removedclasses = nil
 }
 
 // Where appends a list predicates to the StaffMutation builder.
@@ -1501,7 +2126,34 @@ func (m *StaffMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *StaffMutation) Fields() []string {
-	fields := make([]string, 0, 0)
+	fields := make([]string, 0, 9)
+	if m.firstname != nil {
+		fields = append(fields, staff.FieldFirstname)
+	}
+	if m.lastname != nil {
+		fields = append(fields, staff.FieldLastname)
+	}
+	if m.email != nil {
+		fields = append(fields, staff.FieldEmail)
+	}
+	if m.telephone != nil {
+		fields = append(fields, staff.FieldTelephone)
+	}
+	if m.salary != nil {
+		fields = append(fields, staff.FieldSalary)
+	}
+	if m.role != nil {
+		fields = append(fields, staff.FieldRole)
+	}
+	if m.rank != nil {
+		fields = append(fields, staff.FieldRank)
+	}
+	if m.created_at != nil {
+		fields = append(fields, staff.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, staff.FieldUpdatedAt)
+	}
 	return fields
 }
 
@@ -1509,6 +2161,26 @@ func (m *StaffMutation) Fields() []string {
 // return value indicates that this field was not set, or was not defined in the
 // schema.
 func (m *StaffMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case staff.FieldFirstname:
+		return m.Firstname()
+	case staff.FieldLastname:
+		return m.Lastname()
+	case staff.FieldEmail:
+		return m.Email()
+	case staff.FieldTelephone:
+		return m.Telephone()
+	case staff.FieldSalary:
+		return m.Salary()
+	case staff.FieldRole:
+		return m.Role()
+	case staff.FieldRank:
+		return m.Rank()
+	case staff.FieldCreatedAt:
+		return m.CreatedAt()
+	case staff.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
 	return nil, false
 }
 
@@ -1516,6 +2188,26 @@ func (m *StaffMutation) Field(name string) (ent.Value, bool) {
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
 func (m *StaffMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case staff.FieldFirstname:
+		return m.OldFirstname(ctx)
+	case staff.FieldLastname:
+		return m.OldLastname(ctx)
+	case staff.FieldEmail:
+		return m.OldEmail(ctx)
+	case staff.FieldTelephone:
+		return m.OldTelephone(ctx)
+	case staff.FieldSalary:
+		return m.OldSalary(ctx)
+	case staff.FieldRole:
+		return m.OldRole(ctx)
+	case staff.FieldRank:
+		return m.OldRank(ctx)
+	case staff.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case staff.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
 	return nil, fmt.Errorf("unknown Staff field %s", name)
 }
 
@@ -1524,6 +2216,69 @@ func (m *StaffMutation) OldField(ctx context.Context, name string) (ent.Value, e
 // type.
 func (m *StaffMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case staff.FieldFirstname:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFirstname(v)
+		return nil
+	case staff.FieldLastname:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastname(v)
+		return nil
+	case staff.FieldEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEmail(v)
+		return nil
+	case staff.FieldTelephone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTelephone(v)
+		return nil
+	case staff.FieldSalary:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSalary(v)
+		return nil
+	case staff.FieldRole:
+		v, ok := value.(schema.StaffRole)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	case staff.FieldRank:
+		v, ok := value.(schema.StaffRank)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRank(v)
+		return nil
+	case staff.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case staff.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Staff field %s", name)
 }
@@ -1531,13 +2286,21 @@ func (m *StaffMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *StaffMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addsalary != nil {
+		fields = append(fields, staff.FieldSalary)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *StaffMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case staff.FieldSalary:
+		return m.AddedSalary()
+	}
 	return nil, false
 }
 
@@ -1545,6 +2308,15 @@ func (m *StaffMutation) AddedField(name string) (ent.Value, bool) {
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
 func (m *StaffMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case staff.FieldSalary:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSalary(v)
+		return nil
+	}
 	return fmt.Errorf("unknown Staff numeric field %s", name)
 }
 
@@ -1570,54 +2342,137 @@ func (m *StaffMutation) ClearField(name string) error {
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
 func (m *StaffMutation) ResetField(name string) error {
+	switch name {
+	case staff.FieldFirstname:
+		m.ResetFirstname()
+		return nil
+	case staff.FieldLastname:
+		m.ResetLastname()
+		return nil
+	case staff.FieldEmail:
+		m.ResetEmail()
+		return nil
+	case staff.FieldTelephone:
+		m.ResetTelephone()
+		return nil
+	case staff.FieldSalary:
+		m.ResetSalary()
+		return nil
+	case staff.FieldRole:
+		m.ResetRole()
+		return nil
+	case staff.FieldRank:
+		m.ResetRank()
+		return nil
+	case staff.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case staff.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
 	return fmt.Errorf("unknown Staff field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *StaffMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.department != nil {
+		edges = append(edges, staff.EdgeDepartment)
+	}
+	if m.classes != nil {
+		edges = append(edges, staff.EdgeClasses)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *StaffMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case staff.EdgeDepartment:
+		if id := m.department; id != nil {
+			return []ent.Value{*id}
+		}
+	case staff.EdgeClasses:
+		ids := make([]ent.Value, 0, len(m.classes))
+		for id := range m.classes {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *StaffMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.removedclasses != nil {
+		edges = append(edges, staff.EdgeClasses)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *StaffMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case staff.EdgeClasses:
+		ids := make([]ent.Value, 0, len(m.removedclasses))
+		for id := range m.removedclasses {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *StaffMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 2)
+	if m.cleareddepartment {
+		edges = append(edges, staff.EdgeDepartment)
+	}
+	if m.clearedclasses {
+		edges = append(edges, staff.EdgeClasses)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *StaffMutation) EdgeCleared(name string) bool {
+	switch name {
+	case staff.EdgeDepartment:
+		return m.cleareddepartment
+	case staff.EdgeClasses:
+		return m.clearedclasses
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *StaffMutation) ClearEdge(name string) error {
+	switch name {
+	case staff.EdgeDepartment:
+		m.ClearDepartment()
+		return nil
+	}
 	return fmt.Errorf("unknown Staff unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *StaffMutation) ResetEdge(name string) error {
+	switch name {
+	case staff.EdgeDepartment:
+		m.ResetDepartment()
+		return nil
+	case staff.EdgeClasses:
+		m.ResetClasses()
+		return nil
+	}
 	return fmt.Errorf("unknown Staff edge %s", name)
 }
 

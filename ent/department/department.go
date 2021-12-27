@@ -25,6 +25,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeStudents holds the string denoting the students edge name in mutations.
 	EdgeStudents = "students"
+	// EdgeStaffs holds the string denoting the staffs edge name in mutations.
+	EdgeStaffs = "staffs"
 	// Table holds the table name of the department in the database.
 	Table = "departments"
 	// StudentsTable is the table that holds the students relation/edge.
@@ -34,6 +36,13 @@ const (
 	StudentsInverseTable = "students"
 	// StudentsColumn is the table column denoting the students relation/edge.
 	StudentsColumn = "department_id"
+	// StaffsTable is the table that holds the staffs relation/edge.
+	StaffsTable = "staffs"
+	// StaffsInverseTable is the table name for the Staff entity.
+	// It exists in this package in order to avoid circular dependency with the "staff" package.
+	StaffsInverseTable = "staffs"
+	// StaffsColumn is the table column denoting the staffs relation/edge.
+	StaffsColumn = "department_id"
 )
 
 // Columns holds all SQL columns for department fields.

@@ -38,6 +38,12 @@ func (Class) Edges() []ent.Edge {
 				edge.Table("class_student"),
 				edge.Columns("class_id", "student_id"),
 			),
+		edge.To("instructors", Staff.Type).
+			StorageKey(
+				// set join-table and column names
+				edge.Table("class_instructor"),
+				edge.Columns("class_id", "instructor_id"),
+			),
 	}
 }
 

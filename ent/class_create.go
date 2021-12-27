@@ -5,6 +5,7 @@ package ent
 import (
 	"college/ent/class"
 	"college/ent/schema"
+	"college/ent/staff"
 	"college/ent/student"
 	"context"
 	"errors"
@@ -100,6 +101,21 @@ func (cc *ClassCreate) AddStudent(s ...*Student) *ClassCreate {
 		ids[i] = s[i].ID
 	}
 	return cc.AddStudentIDs(ids...)
+}
+
+// AddInstructorIDs adds the "instructors" edge to the Staff entity by IDs.
+func (cc *ClassCreate) AddInstructorIDs(ids ...uuid.UUID) *ClassCreate {
+	cc.mutation.AddInstructorIDs(ids...)
+	return cc
+}
+
+// AddInstructors adds the "instructors" edges to the Staff entity.
+func (cc *ClassCreate) AddInstructors(s ...*Staff) *ClassCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return cc.AddInstructorIDs(ids...)
 }
 
 // Mutation returns the ClassMutation object of the builder.
@@ -334,6 +350,25 @@ func (cc *ClassCreate) createSpec() (*Class, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: student.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.InstructorsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   class.InstructorsTable,
+			Columns: class.InstructorsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: staff.FieldID,
 				},
 			},
 		}

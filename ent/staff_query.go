@@ -3,9 +3,12 @@
 package ent
 
 import (
+	"college/ent/class"
+	"college/ent/department"
 	"college/ent/predicate"
 	"college/ent/staff"
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -13,6 +16,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // StaffQuery is the builder for querying Staff entities.
@@ -24,6 +28,10 @@ type StaffQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Staff
+	// eager-loading edges.
+	withDepartment *DepartmentQuery
+	withClasses    *ClassQuery
+	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -60,6 +68,50 @@ func (sq *StaffQuery) Order(o ...OrderFunc) *StaffQuery {
 	return sq
 }
 
+// QueryDepartment chains the current query on the "department" edge.
+func (sq *StaffQuery) QueryDepartment() *DepartmentQuery {
+	query := &DepartmentQuery{config: sq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(staff.Table, staff.FieldID, selector),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, staff.DepartmentTable, staff.DepartmentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryClasses chains the current query on the "classes" edge.
+func (sq *StaffQuery) QueryClasses() *ClassQuery {
+	query := &ClassQuery{config: sq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := sq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := sq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(staff.Table, staff.FieldID, selector),
+			sqlgraph.To(class.Table, class.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, staff.ClassesTable, staff.ClassesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first Staff entity from the query.
 // Returns a *NotFoundError when no Staff was found.
 func (sq *StaffQuery) First(ctx context.Context) (*Staff, error) {
@@ -84,8 +136,8 @@ func (sq *StaffQuery) FirstX(ctx context.Context) *Staff {
 
 // FirstID returns the first Staff ID from the query.
 // Returns a *NotFoundError when no Staff ID was found.
-func (sq *StaffQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (sq *StaffQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = sq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -97,7 +149,7 @@ func (sq *StaffQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (sq *StaffQuery) FirstIDX(ctx context.Context) int {
+func (sq *StaffQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := sq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -135,8 +187,8 @@ func (sq *StaffQuery) OnlyX(ctx context.Context) *Staff {
 // OnlyID is like Only, but returns the only Staff ID in the query.
 // Returns a *NotSingularError when exactly one Staff ID is not found.
 // Returns a *NotFoundError when no entities are found.
-func (sq *StaffQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (sq *StaffQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = sq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -152,7 +204,7 @@ func (sq *StaffQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (sq *StaffQuery) OnlyIDX(ctx context.Context) int {
+func (sq *StaffQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := sq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -178,8 +230,8 @@ func (sq *StaffQuery) AllX(ctx context.Context) []*Staff {
 }
 
 // IDs executes the query and returns a list of Staff IDs.
-func (sq *StaffQuery) IDs(ctx context.Context) ([]int, error) {
-	var ids []int
+func (sq *StaffQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	var ids []uuid.UUID
 	if err := sq.Select(staff.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -187,7 +239,7 @@ func (sq *StaffQuery) IDs(ctx context.Context) ([]int, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (sq *StaffQuery) IDsX(ctx context.Context) []int {
+func (sq *StaffQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := sq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -236,19 +288,56 @@ func (sq *StaffQuery) Clone() *StaffQuery {
 		return nil
 	}
 	return &StaffQuery{
-		config:     sq.config,
-		limit:      sq.limit,
-		offset:     sq.offset,
-		order:      append([]OrderFunc{}, sq.order...),
-		predicates: append([]predicate.Staff{}, sq.predicates...),
+		config:         sq.config,
+		limit:          sq.limit,
+		offset:         sq.offset,
+		order:          append([]OrderFunc{}, sq.order...),
+		predicates:     append([]predicate.Staff{}, sq.predicates...),
+		withDepartment: sq.withDepartment.Clone(),
+		withClasses:    sq.withClasses.Clone(),
 		// clone intermediate query.
 		sql:  sq.sql.Clone(),
 		path: sq.path,
 	}
 }
 
+// WithDepartment tells the query-builder to eager-load the nodes that are connected to
+// the "department" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *StaffQuery) WithDepartment(opts ...func(*DepartmentQuery)) *StaffQuery {
+	query := &DepartmentQuery{config: sq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withDepartment = query
+	return sq
+}
+
+// WithClasses tells the query-builder to eager-load the nodes that are connected to
+// the "classes" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *StaffQuery) WithClasses(opts ...func(*ClassQuery)) *StaffQuery {
+	query := &ClassQuery{config: sq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	sq.withClasses = query
+	return sq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Firstname string `json:"firstname,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Staff.Query().
+//		GroupBy(staff.FieldFirstname).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (sq *StaffQuery) GroupBy(field string, fields ...string) *StaffGroupBy {
 	group := &StaffGroupBy{config: sq.config}
 	group.fields = append([]string{field}, fields...)
@@ -263,6 +352,17 @@ func (sq *StaffQuery) GroupBy(field string, fields ...string) *StaffGroupBy {
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		Firstname string `json:"firstname,omitempty"`
+//	}
+//
+//	client.Staff.Query().
+//		Select(staff.FieldFirstname).
+//		Scan(ctx, &v)
+//
 func (sq *StaffQuery) Select(fields ...string) *StaffSelect {
 	sq.fields = append(sq.fields, fields...)
 	return &StaffSelect{StaffQuery: sq}
@@ -286,9 +386,20 @@ func (sq *StaffQuery) prepareQuery(ctx context.Context) error {
 
 func (sq *StaffQuery) sqlAll(ctx context.Context) ([]*Staff, error) {
 	var (
-		nodes = []*Staff{}
-		_spec = sq.querySpec()
+		nodes       = []*Staff{}
+		withFKs     = sq.withFKs
+		_spec       = sq.querySpec()
+		loadedTypes = [2]bool{
+			sq.withDepartment != nil,
+			sq.withClasses != nil,
+		}
 	)
+	if sq.withDepartment != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, staff.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Staff{config: sq.config}
 		nodes = append(nodes, node)
@@ -299,6 +410,7 @@ func (sq *StaffQuery) sqlAll(ctx context.Context) ([]*Staff, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, sq.driver, _spec); err != nil {
@@ -307,6 +419,101 @@ func (sq *StaffQuery) sqlAll(ctx context.Context) ([]*Staff, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := sq.withDepartment; query != nil {
+		ids := make([]uuid.UUID, 0, len(nodes))
+		nodeids := make(map[uuid.UUID][]*Staff)
+		for i := range nodes {
+			if nodes[i].department_id == nil {
+				continue
+			}
+			fk := *nodes[i].department_id
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(department.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "department_id" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Department = n
+			}
+		}
+	}
+
+	if query := sq.withClasses; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		ids := make(map[uuid.UUID]*Staff, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
+			node.Edges.Classes = []*Class{}
+		}
+		var (
+			edgeids []uuid.UUID
+			edges   = make(map[uuid.UUID][]*Staff)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: true,
+				Table:   staff.ClassesTable,
+				Columns: staff.ClassesPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(staff.ClassesPrimaryKey[1], fks...))
+			},
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{new(uuid.UUID), new(uuid.UUID)}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*uuid.UUID)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*uuid.UUID)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := *eout
+				inValue := *ein
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				if _, ok := edges[inValue]; !ok {
+					edgeids = append(edgeids, inValue)
+				}
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, sq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "classes": %w`, err)
+		}
+		query.Where(class.IDIn(edgeids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := edges[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected "classes" node returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Classes = append(nodes[i].Edges.Classes, n)
+			}
+		}
+	}
+
 	return nodes, nil
 }
 
@@ -329,7 +536,7 @@ func (sq *StaffQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   staff.Table,
 			Columns: staff.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
+				Type:   field.TypeUUID,
 				Column: staff.FieldID,
 			},
 		},

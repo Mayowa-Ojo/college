@@ -5,6 +5,7 @@ package ent
 import (
 	"college/ent/department"
 	"college/ent/predicate"
+	"college/ent/staff"
 	"college/ent/student"
 	"context"
 	"database/sql/driver"
@@ -29,6 +30,7 @@ type DepartmentQuery struct {
 	predicates []predicate.Department
 	// eager-loading edges.
 	withStudents *StudentQuery
+	withStaffs   *StaffQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -80,6 +82,28 @@ func (dq *DepartmentQuery) QueryStudents() *StudentQuery {
 			sqlgraph.From(department.Table, department.FieldID, selector),
 			sqlgraph.To(student.Table, student.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, department.StudentsTable, department.StudentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(dq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryStaffs chains the current query on the "staffs" edge.
+func (dq *DepartmentQuery) QueryStaffs() *StaffQuery {
+	query := &StaffQuery{config: dq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := dq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := dq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(department.Table, department.FieldID, selector),
+			sqlgraph.To(staff.Table, staff.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, department.StaffsTable, department.StaffsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(dq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,6 +293,7 @@ func (dq *DepartmentQuery) Clone() *DepartmentQuery {
 		order:        append([]OrderFunc{}, dq.order...),
 		predicates:   append([]predicate.Department{}, dq.predicates...),
 		withStudents: dq.withStudents.Clone(),
+		withStaffs:   dq.withStaffs.Clone(),
 		// clone intermediate query.
 		sql:  dq.sql.Clone(),
 		path: dq.path,
@@ -283,6 +308,17 @@ func (dq *DepartmentQuery) WithStudents(opts ...func(*StudentQuery)) *Department
 		opt(query)
 	}
 	dq.withStudents = query
+	return dq
+}
+
+// WithStaffs tells the query-builder to eager-load the nodes that are connected to
+// the "staffs" edge. The optional arguments are used to configure the query builder of the edge.
+func (dq *DepartmentQuery) WithStaffs(opts ...func(*StaffQuery)) *DepartmentQuery {
+	query := &StaffQuery{config: dq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	dq.withStaffs = query
 	return dq
 }
 
@@ -351,8 +387,9 @@ func (dq *DepartmentQuery) sqlAll(ctx context.Context) ([]*Department, error) {
 	var (
 		nodes       = []*Department{}
 		_spec       = dq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			dq.withStudents != nil,
+			dq.withStaffs != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -397,6 +434,35 @@ func (dq *DepartmentQuery) sqlAll(ctx context.Context) ([]*Department, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "department_id" returned %v for node %v`, fk, n.ID)
 			}
 			node.Edges.Students = append(node.Edges.Students, n)
+		}
+	}
+
+	if query := dq.withStaffs; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[uuid.UUID]*Department)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Staffs = []*Staff{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Staff(func(s *sql.Selector) {
+			s.Where(sql.InValues(department.StaffsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.department_id
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "department_id" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "department_id" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Staffs = append(node.Edges.Staffs, n)
 		}
 	}
 

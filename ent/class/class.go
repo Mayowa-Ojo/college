@@ -31,6 +31,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// EdgeStudent holds the string denoting the student edge name in mutations.
 	EdgeStudent = "student"
+	// EdgeInstructors holds the string denoting the instructors edge name in mutations.
+	EdgeInstructors = "instructors"
 	// Table holds the table name of the class in the database.
 	Table = "classes"
 	// StudentTable is the table that holds the student relation/edge. The primary key declared below.
@@ -38,6 +40,11 @@ const (
 	// StudentInverseTable is the table name for the Student entity.
 	// It exists in this package in order to avoid circular dependency with the "student" package.
 	StudentInverseTable = "students"
+	// InstructorsTable is the table that holds the instructors relation/edge. The primary key declared below.
+	InstructorsTable = "class_instructor"
+	// InstructorsInverseTable is the table name for the Staff entity.
+	// It exists in this package in order to avoid circular dependency with the "staff" package.
+	InstructorsInverseTable = "staffs"
 )
 
 // Columns holds all SQL columns for class fields.
@@ -56,6 +63,9 @@ var (
 	// StudentPrimaryKey and StudentColumn2 are the table columns denoting the
 	// primary key for the student relation (M2M).
 	StudentPrimaryKey = []string{"class_id", "student_id"}
+	// InstructorsPrimaryKey and InstructorsColumn2 are the table columns denoting the
+	// primary key for the instructors relation (M2M).
+	InstructorsPrimaryKey = []string{"class_id", "instructor_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
